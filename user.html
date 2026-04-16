@@ -1,59 +1,56 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel User</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-light">
-  <nav class="navbar navbar-dark bg-dark">
-    <div class="container">
-      <span class="navbar-brand mb-0 h1">Panel User</span>
-      <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-
-  <div class="container py-4">
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div>
-            <h4 class="mb-1">Inbox Saya</h4>
-            <div class="text-secondary">Email aktif: <b id="activeEmail"></b></div>
-          </div>
-          <button class="btn btn-dark" onclick="loadMessages()">Refresh</button>
-        </div>
+<body class="bg-slate-100 min-h-screen">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Panel User</h1>
+        <p class="text-sm text-slate-500">Lihat inbox email Anda sendiri</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="loadMessages()" class="rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
+          Refresh
+        </button>
+        <button onclick="logout()" class="rounded-xl bg-slate-200 text-slate-800 px-4 py-2 text-sm font-medium hover:bg-slate-300">
+          Logout
+        </button>
       </div>
     </div>
+  </header>
 
-    <div class="row g-4">
-      <div class="col-lg-5">
-        <div class="card border-0 shadow-sm rounded-4">
-          <div class="card-body">
-            <h5 class="mb-3">Daftar Pesan</h5>
-            <div id="list">Memuat...</div>
-          </div>
-        </div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <div class="flex flex-col gap-2">
+        <h2 class="text-xl font-semibold text-slate-900">Inbox Saya</h2>
+        <p class="text-sm text-slate-500">Email aktif: <span id="activeEmail" class="font-semibold text-slate-800"></span></p>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <h3 class="text-xl font-semibold text-slate-900 mb-4">Daftar Pesan</h3>
+        <div id="list">Memuat...</div>
       </div>
 
-      <div class="col-lg-7">
-        <div class="card border-0 shadow-sm rounded-4">
-          <div class="card-body">
-            <h5 class="mb-3">Detail Pesan</h5>
-            <div id="detail" class="text-secondary">Pilih pesan untuk melihat isi.</div>
-          </div>
-        </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <h3 class="text-xl font-semibold text-slate-900 mb-4">Detail Pesan</h3>
+        <div id="detail" class="text-sm text-slate-500">Pilih pesan untuk melihat isi.</div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script>
     const API_BASE = "https://api.sonten.web.id";
     const auth = JSON.parse(localStorage.getItem("auth_user") || "null");
 
     if (!auth || auth.role !== "user") {
-      location.href = "./login.html";
+      window.location.href = "./index.html";
     }
 
     document.getElementById("activeEmail").textContent = auth.email;
@@ -74,92 +71,106 @@
       };
     }
 
+    function logout() {
+      localStorage.removeItem("auth_user");
+      window.location.href = "./index.html";
+    }
+
     async function loadMessages() {
       const listEl = document.getElementById("list");
       const detailEl = document.getElementById("detail");
 
-      listEl.innerHTML = "Memuat inbox...";
+      listEl.innerHTML = '<div class="text-sm text-slate-500">Memuat inbox...</div>';
 
-      const res = await fetch(API_BASE + "/api/user/messages", {
-        headers: authHeaders()
-      });
+      try {
+        const res = await fetch(API_BASE + "/api/user/messages", {
+          headers: authHeaders()
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok) {
-        listEl.innerHTML = '<div class="alert alert-danger">' + escapeHtml(data.error || "Gagal memuat inbox") + '</div>';
-        return;
-      }
+        if (!res.ok) {
+          listEl.innerHTML = '<div class="text-sm text-red-600">' + escapeHtml(data.error || "Gagal memuat inbox") + '</div>';
+          return;
+        }
 
-      const messages = data.messages || [];
+        const messages = data.messages || [];
 
-      if (!messages.length) {
-        listEl.innerHTML = '<div class="alert alert-secondary">Inbox kosong.</div>';
-        detailEl.innerHTML = "Pilih pesan untuk melihat isi.";
-        return;
-      }
+        if (!messages.length) {
+          listEl.innerHTML = '<div class="rounded-xl bg-slate-100 p-4 text-sm text-slate-500">Inbox kosong.</div>';
+          detailEl.innerHTML = "Pilih pesan untuk melihat isi.";
+          return;
+        }
 
-      listEl.innerHTML = messages.map(function(msg) {
-        return `
-          <div class="border rounded-3 p-3 mb-3 bg-body-tertiary">
-            <div class="fw-bold">${escapeHtml(msg.subject || "(No Subject)")}</div>
-            <div class="small text-secondary">Dari: ${escapeHtml(msg.from_email || "-")}</div>
-            <div class="small text-secondary">Waktu: ${escapeHtml(msg.received_at || "-")}</div>
-            <div class="mt-3 d-flex gap-2">
-              <button class="btn btn-sm btn-dark" onclick="openMessage('${msg.id}')">Buka</button>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteMessage('${msg.id}')">Hapus</button>
+        listEl.innerHTML = messages.map(function(msg) {
+          return `
+            <div class="rounded-xl border border-slate-200 p-4 mb-3 bg-slate-50">
+              <div class="font-semibold text-slate-900">${escapeHtml(msg.subject || "(No Subject)")}</div>
+              <div class="text-xs text-slate-500 mt-1">Dari: ${escapeHtml(msg.from_email || "-")}</div>
+              <div class="text-xs text-slate-500">Waktu: ${escapeHtml(msg.received_at || "-")}</div>
+              <div class="mt-3 flex gap-2">
+                <button onclick="openMessage('${msg.id}')" class="rounded-lg bg-slate-900 text-white px-3 py-2 text-xs font-medium hover:bg-slate-800">Buka</button>
+                <button onclick="deleteMessage('${msg.id}')" class="rounded-lg border border-red-300 text-red-700 px-3 py-2 text-xs font-medium hover:bg-red-50">Hapus</button>
+              </div>
             </div>
-          </div>
-        `;
-      }).join("");
+          `;
+        }).join("");
+      } catch (err) {
+        listEl.innerHTML = '<div class="text-sm text-red-600">Tidak bisa terhubung ke server</div>';
+      }
     }
 
     async function openMessage(id) {
       const detailEl = document.getElementById("detail");
       detailEl.innerHTML = "Memuat detail...";
 
-      const res = await fetch(API_BASE + "/api/user/message/" + id, {
-        headers: authHeaders()
-      });
+      try {
+        const res = await fetch(API_BASE + "/api/user/message/" + id, {
+          headers: authHeaders()
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok) {
-        detailEl.innerHTML = '<div class="alert alert-danger">' + escapeHtml(data.error || "Gagal membuka pesan") + '</div>';
-        return;
+        if (!res.ok) {
+          detailEl.innerHTML = '<div class="text-sm text-red-600">' + escapeHtml(data.error || "Gagal membuka pesan") + '</div>';
+          return;
+        }
+
+        detailEl.innerHTML = `
+          <div class="space-y-2 text-sm">
+            <div><span class="font-semibold text-slate-700">Subject:</span> <span class="text-slate-900">${escapeHtml(data.subject || "(No Subject)")}</span></div>
+            <div><span class="font-semibold text-slate-700">Dari:</span> <span class="text-slate-900">${escapeHtml(data.from_email || "-")}</span></div>
+            <div><span class="font-semibold text-slate-700">Untuk:</span> <span class="text-slate-900">${escapeHtml(data.user_email || "-")}</span></div>
+            <div><span class="font-semibold text-slate-700">Waktu:</span> <span class="text-slate-900">${escapeHtml(data.received_at || "-")}</span></div>
+          </div>
+          <pre class="mt-4 whitespace-pre-wrap break-words rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs text-slate-700 overflow-auto">${escapeHtml(data.body_text || "")}</pre>
+        `;
+      } catch (err) {
+        detailEl.innerHTML = '<div class="text-sm text-red-600">Tidak bisa terhubung ke server</div>';
       }
-
-      detailEl.innerHTML = `
-        <div class="mb-2"><b>Subject:</b> ${escapeHtml(data.subject || "(No Subject)")}</div>
-        <div class="mb-2"><b>Dari:</b> ${escapeHtml(data.from_email || "-")}</div>
-        <div class="mb-2"><b>Untuk:</b> ${escapeHtml(data.user_email || "-")}</div>
-        <div class="mb-3"><b>Waktu:</b> ${escapeHtml(data.received_at || "-")}</div>
-        <pre class="bg-light border rounded-3 p-3">${escapeHtml(data.body_text || "")}</pre>
-      `;
     }
 
     async function deleteMessage(id) {
       if (!confirm("Hapus pesan ini?")) return;
 
-      const res = await fetch(API_BASE + "/api/user/message/" + id, {
-        method: "DELETE",
-        headers: authHeaders()
-      });
+      try {
+        const res = await fetch(API_BASE + "/api/user/message/" + id, {
+          method: "DELETE",
+          headers: authHeaders()
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.error || "Gagal hapus pesan");
-        return;
+        if (!res.ok) {
+          alert(data.error || "Gagal hapus pesan");
+          return;
+        }
+
+        document.getElementById("detail").innerHTML = "Pilih pesan untuk melihat isi.";
+        loadMessages();
+      } catch (err) {
+        alert("Tidak bisa terhubung ke server");
       }
-
-      document.getElementById("detail").innerHTML = "Pilih pesan untuk melihat isi.";
-      loadMessages();
-    }
-
-    function logout() {
-      localStorage.removeItem("auth_user");
-      location.href = "./login.html";
     }
 
     loadMessages();
