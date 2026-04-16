@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">Panel Admin</span>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body">
+        <h4 class="mb-1">Dashboard Admin</h4>
+        <div class="text-secondary">Admin aktif: <b id="adminEmail"></b></div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body">
+            <h5 class="mb-3">Tambah User</h5>
+
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input id="newEmail" class="form-control" placeholder="email user">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input id="newPassword" class="form-control" placeholder="password">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Role</label>
+              <select id="newRole" class="form-select">
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+
+            <button class="btn btn-success" onclick="createUser()">Tambah User</button>
+            <div id="adminMsg" class="small mt-3 text-secondary"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body">
+            <h5 class="mb-3">Lihat Inbox User</h5>
+            <div class="input-group mb-3">
+              <input id="inspectEmail" class="form-control" placeholder="email user untuk dilihat inbox-nya">
+              <button class="btn btn-dark" onclick="loadUserMessages()">Lihat Inbox</button>
+            </div>
+            <div id="inspectList" class="text-secondary">Pilih email user dulu.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Daftar User</h5>
+              <button class="btn btn-dark btn-sm" onclick="loadUsers()">Refresh User</button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Dibuat</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="userTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body">
+            <h5 class="mb-3">Detail Pesan User</h5>
+            <div id="inspectDetail" class="text-secondary">Klik tombol buka pada inbox user.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://api.sonten.web.id";
+    const auth = JSON.parse(localStorage.getItem("auth_user") || "null");
+
+    if (!auth || auth.role !== "admin") {
+      location.href = "./login.html";
+    }
+
+    document.getElementById("adminEmail").textContent = auth.email;
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function authHeaders() {
+      return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + auth.token
+      };
+    }
+
+    function logout() {
+      localStorage.removeItem("auth_user");
+      location.href = "./login.html";
+    }
+
+    async function loadUsers() {
+      const table = document.getElementById("userTable");
+      table.innerHTML = '<tr><td colspan="5">Memuat...</td></tr>';
+
+      const res = await fetch(API_BASE + "/api/admin/users", {
+        headers: authHeaders()
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        table.innerHTML = '<tr><td colspan="5">' + escapeHtml(data.error || "Gagal memuat user") + '</td></tr>';
+        return;
+      }
+
+      const users = data.users || [];
+
+      if (!users.length) {
+        table.innerHTML = '<tr><td colspan="5">Belum ada user.</td></tr>';
+        return;
+      }
+
+      table.innerHTML = users.map(function(u) {
+        const badge = u.status === "active"
+          ? '<span class="badge text-bg-success">active</span>'
+          : '<span class="badge text-bg-danger">inactive</span>';
+
+        const toggleLabel = u.status === "active" ? "Nonaktifkan" : "Aktifkan";
+        const toggleTarget = u.status === "active" ? "inactive" : "active";
+
+        return `
+          <tr>
+            <td>${escapeHtml(u.email)}</td>
+            <td>${escapeHtml(u.role)}</td>
+            <td>${badge}</td>
+            <td>${escapeHtml(u.created_at || "-")}</td>
+            <td>
+              <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-dark" onclick="prefillInspect('${u.email}')">Inbox</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="resetPassword('${u.email}')">Reset</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleStatus('${u.email}', '${toggleTarget}')">${toggleLabel}</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.email}')">Hapus</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function createUser() {
+      const email = document.getElementById("newEmail").value.trim().toLowerCase();
+      const password = document.getElementById("newPassword").value.trim();
+      const role = document.getElementById("newRole").value;
+      const msg = document.getElementById("adminMsg");
+
+      msg.textContent = "Memproses...";
+
+      const res = await fetch(API_BASE + "/api/admin/create-user", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ email, password, role })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        msg.textContent = data.error || "Gagal menambah user";
+        return;
+      }
+
+      msg.textContent = "User berhasil dibuat: " + data.email;
+      document.getElementById("newEmail").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("newRole").value = "user";
+
+      loadUsers();
+    }
+
+    async function resetPassword(email) {
+      const newPassword = prompt("Masukkan password baru untuk " + email);
+      if (!newPassword) return;
+
+      const res = await fetch(API_BASE + "/api/admin/reset-password", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ email, newPassword })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Gagal reset password");
+        return;
+      }
+
+      alert("Password berhasil direset");
+    }
+
+    async function toggleStatus(email, status) {
+      const res = await fetch(API_BASE + "/api/admin/set-status", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ email, status })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Gagal mengubah status");
+        return;
+      }
+
+      loadUsers();
+    }
+
+    async function deleteUser(email) {
+      if (!confirm("Hapus user " + email + " beserta semua pesannya?")) return;
+
+      const res = await fetch(API_BASE + "/api/admin/delete-user", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Gagal menghapus user");
+        return;
+      }
+
+      loadUsers();
+    }
+
+    function prefillInspect(email) {
+      document.getElementById("inspectEmail").value = email;
+      loadUserMessages();
+    }
+
+    async function loadUserMessages() {
+      const email = document.getElementById("inspectEmail").value.trim().toLowerCase();
+      const list = document.getElementById("inspectList");
+
+      if (!email) {
+        list.innerHTML = "Masukkan email user dulu.";
+        return;
+      }
+
+      list.innerHTML = "Memuat inbox user...";
+
+      const res = await fetch(API_BASE + "/api/admin/messages?email=" + encodeURIComponent(email), {
+        headers: authHeaders()
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        list.innerHTML = escapeHtml(data.error || "Gagal memuat inbox user");
+        return;
+      }
+
+      const messages = data.messages || [];
+
+      if (!messages.length) {
+        list.innerHTML = '<div class="alert alert-secondary">Inbox user kosong.</div>';
+        document.getElementById("inspectDetail").innerHTML = "Klik tombol buka pada inbox user.";
+        return;
+      }
+
+      list.innerHTML = messages.map(function(msg) {
+        return `
+          <div class="border rounded-3 p-3 mb-3 bg-body-tertiary">
+            <div class="fw-bold">${escapeHtml(msg.subject || "(No Subject)")}</div>
+            <div class="small text-secondary">Dari: ${escapeHtml(msg.from_email || "-")}</div>
+            <div class="small text-secondary">Waktu: ${escapeHtml(msg.received_at || "-")}</div>
+            <div class="mt-3 d-flex gap-2">
+              <button class="btn btn-sm btn-dark" onclick="openAdminMessage('${msg.id}')">Buka</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="adminDeleteMessage('${msg.id}')">Hapus</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function openAdminMessage(id) {
+      const detail = document.getElementById("inspectDetail");
+      detail.innerHTML = "Memuat detail...";
+
+      const res = await fetch(API_BASE + "/api/user/message/" + id, {
+        headers: authHeaders()
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        detail.innerHTML = escapeHtml(data.error || "Gagal membuka pesan");
+        return;
+      }
+
+      detail.innerHTML = `
+        <div class="mb-2"><b>Subject:</b> ${escapeHtml(data.subject || "(No Subject)")}</div>
+        <div class="mb-2"><b>Dari:</b> ${escapeHtml(data.from_email || "-")}</div>
+        <div class="mb-2"><b>Untuk:</b> ${escapeHtml(data.user_email || "-")}</div>
+        <div class="mb-3"><b>Waktu:</b> ${escapeHtml(data.received_at || "-")}</div>
+        <pre class="bg-light border rounded-3 p-3">${escapeHtml(data.body_text || "")}</pre>
+      `;
+    }
+
+    async function adminDeleteMessage(id) {
+      if (!confirm("Hapus pesan ini?")) return;
+
+      const res = await fetch(API_BASE + "/api/user/message/" + id, {
+        method: "DELETE",
+        headers: authHeaders()
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Gagal hapus pesan");
+        return;
+      }
+
+      document.getElementById("inspectDetail").innerHTML = "Klik tombol buka pada inbox user.";
+      loadUserMessages();
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
