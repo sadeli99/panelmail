@@ -233,7 +233,20 @@
 
     <script>
         const API_BASE = "https://api.sonten.web.id";
-        let auth = JSON.parse(localStorage.getItem("auth_user") || "null");
+        
+        // --- AUTH & LOCALSTORAGE LOGIC (Aman dari Refresh) ---
+        let auth = null;
+        try {
+            // Ambil dari localStorage ketika halaman baru dimuat atau di-refresh
+            const storedAuth = localStorage.getItem("auth_user");
+            if (storedAuth) {
+                auth = JSON.parse(storedAuth);
+            }
+        } catch (error) {
+            // Jika data JSON corrupt, bersihkan localStorage
+            localStorage.removeItem("auth_user");
+            auth = null;
+        }
 
         // --- View Controller ---
         function showView(viewId) {
@@ -242,10 +255,13 @@
             if(target) target.classList.add('active-view');
         }
 
+        // Fungsi init ini akan dijalankan otomatis saat halaman selesai dimuat
         function init() {
             if (!auth) {
+                // Jika tidak ada sesi di localStorage, tampilkan form login
                 showView('login-view');
             } else {
+                // Jika sudah ada sesi, langsung arahkan ke dashboard yang sesuai
                 if (auth.role === "admin") {
                     showView('admin-view');
                     document.getElementById('adminEmailDisplay').textContent = auth.email;
@@ -258,13 +274,20 @@
             }
         }
 
+        function authHeaders() {
+            return { "Content-Type": "application/json", "Authorization": "Bearer " + (auth ? auth.token : "") };
+        }
+
+        // Fungsi Logout yang akan menghapus data di localStorage
+        function logout() {
+            localStorage.removeItem("auth_user");
+            auth = null;
+            window.location.reload(); // Muat ulang halaman agar kembali ke form login
+        }
+
         // --- Helpers ---
         function escapeHtml(str) {
             return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        function authHeaders() {
-            return { "Content-Type": "application/json", "Authorization": "Bearer " + (auth ? auth.token : "") };
         }
 
         function setLoading(state) {
@@ -272,17 +295,10 @@
             state ? overlay.classList.remove('hidden') : overlay.classList.add('hidden');
         }
 
-        function logout() {
-            localStorage.removeItem("auth_user");
-            auth = null;
-            window.location.reload();
-        }
-
         // --- MIME EMAIL PARSER ---
-        // Digunakan untuk menangkap payload raw (seperti contoh Canva)
         function decodeQuotedPrintable(input) {
-            let str = input.replace(/=\r?\n/g, ''); // Hapus soft line-breaks
-            str = str.replace(/=([a-fA-F0-9]{2})/g, "%$1"); // Format URL-encode untuk karakter spesial
+            let str = input.replace(/=\r?\n/g, ''); 
+            str = str.replace(/=([a-fA-F0-9]{2})/g, "%$1"); 
             try { return decodeURIComponent(str); } catch(e) { return unescape(str); }
         }
 
@@ -293,7 +309,6 @@
             let htmlBlock = "";
             let textBlock = "";
             
-            // Pemisahan berdasarkan boundary
             const parts = raw.split(/------=_[^\r\n]+/);
             for (let part of parts) {
                 if (part.match(/Content-Type:\s*text\/html/i)) htmlBlock = part;
@@ -304,7 +319,6 @@
             if (!selected) return { type: 'text', content: raw, raw: raw };
 
             let isHtml = !!htmlBlock;
-            // Konten asli dipisahkan oleh 2 line break setelah headers
             let contentMatch = selected.match(/\r?\n\r?\n([\s\S]*)/);
             if (!contentMatch) return { type: 'text', content: raw, raw: raw };
 
@@ -317,7 +331,6 @@
             return { type: isHtml ? 'html' : 'text', content: content, raw: raw };
         }
 
-        // Global variable untuk toggle Modal
         let currentParsedEmail = null;
 
         function toggleViewMode(mode) {
@@ -381,7 +394,6 @@
 
                 mSubj.textContent = escapeHtml(data.subject || "(No Subject)");
                 
-                // Formatter Meta
                 mMeta.innerHTML = `
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
@@ -398,18 +410,16 @@
                     </div>
                 `;
 
-                // Parsing isi konten dari text ke HTML
                 currentParsedEmail = parseEmail(data.body_text);
 
                 if (currentParsedEmail.type === 'html') {
                     mControls.classList.remove('hidden');
                     toggleViewMode('html');
                 } else {
-                    mControls.classList.add('hidden'); // Sembunyikan toggle kalau cuma teks biasa
+                    mControls.classList.add('hidden');
                     mBodyContainer.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm p-6 overflow-x-auto">${escapeHtml(currentParsedEmail.content)}</pre>`;
                 }
 
-                // Delete logic
                 mDelBtn.onclick = async () => {
                     if (!confirm("Hapus pesan ini secara permanen?")) return;
                     setLoading(true);
@@ -461,11 +471,17 @@
                     return;
                 }
 
+                // Simpan Sesi ke LocalStorage di sini
                 localStorage.setItem("auth_user", JSON.stringify(data.user));
                 auth = data.user;
+                
                 msg.className = "mt-6 text-sm text-center font-bold text-emerald-600";
                 msg.textContent = "Berhasil masuk! Mengalihkan...";
-                setTimeout(init, 800);
+                
+                // Gunakan reload agar halaman ter-refresh dan memuat ulang sesi secara bersih
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             } catch (err) {
                 msg.className = "mt-6 text-sm text-center font-bold text-rose-600";
                 msg.textContent = "Koneksi terputus ke server.";
@@ -656,6 +672,7 @@
             } catch (err) { listEl.innerHTML = "<div class='text-rose-500 font-bold text-center col-span-full py-10'>Error loading inbox.</div>"; }
         }
 
+        // Panggil init() agar fungsi berjalan pada awal browser di-load/refresh
         init();
     </script>
 </body>
