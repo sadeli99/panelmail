@@ -1,92 +1,662 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login Panel Mail</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MailPanel - Professional Email Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Menggunakan Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .view-section { display: none; }
+        .active-view { display: block; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-animate { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-  <div class="w-full max-w-md">
-    <div class="bg-white rounded-2xl shadow-lg p-8">
-      <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-slate-900">Panel Mail</h1>
-        <p class="text-slate-500 mt-2">Masuk ke panel admin atau inbox user</p>
-      </div>
+<body class="bg-slate-50 min-h-screen text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
 
-      <form id="loginForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
-          <input
-            id="email"
-            type="email"
-            class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
-            placeholder="email@domain.com"
-            required
-          />
+    <!-- LOGIN VIEW -->
+    <div id="login-view" class="view-section min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+        <!-- Dekorasi Latar -->
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="w-full max-w-md relative z-10">
+            <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-slate-200/50 p-6 sm:p-10 border border-white">
+                <div class="mb-8 sm:mb-10 text-center">
+                    <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-2xl mb-4 shadow-lg shadow-indigo-200">
+                        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">MailPanel</h1>
+                    <p class="text-sm sm:text-base text-slate-500 mt-2 font-medium">Masuk ke ruang kerja Anda</p>
+                </div>
+
+                <form id="loginForm" class="space-y-4 sm:space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Alamat Email</label>
+                        <input id="email" type="email" class="w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3.5 outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm sm:text-base font-medium" placeholder="name@example.com" required />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Kata Sandi</label>
+                        <input id="password" type="password" class="w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3.5 outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm sm:text-base font-medium" placeholder="••••••••" required />
+                    </div>
+
+                    <button type="submit" class="w-full rounded-2xl bg-indigo-600 text-white py-3.5 sm:py-4 font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-200 transform active:scale-[0.98] transition-all text-sm sm:text-base">
+                        Masuk Sekarang
+                    </button>
+                </form>
+                <div id="msg" class="mt-6 text-sm text-center font-bold"></div>
+            </div>
         </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Password</label>
-          <input
-            id="password"
-            type="password"
-            class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
-            placeholder="Password"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          class="w-full rounded-xl bg-slate-900 text-white py-3 font-semibold hover:bg-slate-800 transition"
-        >
-          Login
-        </button>
-      </form>
-
-      <div id="msg" class="mt-4 text-sm text-red-600 text-center"></div>
     </div>
-  </div>
 
-  <script>
-    const API_BASE = "https://api.sonten.web.id";
+    <!-- ADMIN VIEW -->
+    <div id="admin-view" class="view-section">
+        <header class="glass border-b border-slate-200 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl hidden sm:block shadow-md shadow-indigo-100">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-extrabold text-slate-900">Admin Dashboard</h1>
+                        <p class="text-[10px] sm:text-xs text-slate-500 font-bold" id="adminEmailDisplay"></p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="px-4 py-2 w-full sm:w-auto bg-rose-50 text-rose-600 rounded-xl text-sm font-bold hover:bg-rose-100 transition-colors">Keluar</button>
+            </div>
+        </header>
 
-    const loginForm = document.getElementById("loginForm");
-    const msg = document.getElementById("msg");
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                <!-- Tambah User Card -->
+                <div class="lg:col-span-1 bg-white rounded-[2rem] p-5 sm:p-7 shadow-sm border border-slate-100">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                        <div class="p-1.5 bg-indigo-50 rounded-lg text-indigo-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg></div>
+                        Tambah Akun Baru
+                    </h2>
+                    <div class="space-y-3 sm:space-y-4">
+                        <input id="newEmail" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Email Baru" />
+                        <input id="newPassword" type="password" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Kata Sandi" />
+                        <select id="newRole" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white">
+                            <option value="user">Hak Akses: User</option>
+                            <option value="admin">Hak Akses: Admin</option>
+                        </select>
+                        <button onclick="createUser()" class="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 mt-2">Simpan Akun</button>
+                        <div id="adminMsg" class="text-xs text-center font-bold py-2 text-slate-500"></div>
+                    </div>
+                </div>
 
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.textContent = "Memproses...";
+                <!-- Inspeksi Inbox Card -->
+                <div class="lg:col-span-2 bg-white rounded-[2rem] p-5 sm:p-7 shadow-sm border border-slate-100 flex flex-col">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                        <div class="p-1.5 bg-blue-50 rounded-lg text-blue-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
+                        Inspeksi Inbox User
+                    </h2>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+                        <input id="inspectEmail" class="flex-1 rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Ketik alamat email user..." />
+                        <button onclick="loadUserMessages()" class="bg-slate-900 text-white px-6 sm:px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">Periksa</button>
+                    </div>
+                    <div id="inspectList" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2 flex-1 items-start content-start">
+                        <div class="text-sm text-slate-400 font-medium italic md:col-span-2 text-center py-10 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">Ketik email lalu klik Periksa untuk melihat inbox</div>
+                    </div>
+                </div>
+            </div>
 
-      const email = document.getElementById("email").value.trim().toLowerCase();
-      const password = document.getElementById("password").value.trim();
+            <!-- Tabel Database -->
+            <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-5 sm:px-7 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Database Pengguna</h2>
+                    <button onclick="loadUsers()" class="flex items-center gap-2 text-indigo-600 font-bold text-xs sm:text-sm hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span class="hidden sm:inline">Perbarui</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left whitespace-nowrap min-w-[650px]">
+                        <thead>
+                            <tr class="text-xs uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                                <th class="px-5 sm:px-7 py-4 font-extrabold">Akun Email</th>
+                                <th class="px-5 sm:px-7 py-4 font-extrabold">Role</th>
+                                <th class="px-5 sm:px-7 py-4 font-extrabold">Status</th>
+                                <th class="px-5 sm:px-7 py-4 font-extrabold text-right">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTable" class="divide-y divide-slate-100 text-sm font-medium">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
 
-      try {
-        const res = await fetch(API_BASE + "/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
+    <!-- USER VIEW -->
+    <div id="user-view" class="view-section">
+        <header class="glass border-b border-slate-200 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl hidden sm:block shadow-md shadow-indigo-100">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-extrabold text-slate-900">Inbox Saya</h1>
+                        <p class="text-[10px] sm:text-xs text-slate-500 font-bold" id="activeEmail"></p>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="loadMessages()" class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all text-center">Refresh</button>
+                    <button onclick="logout()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all text-center">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden min-h-[70vh] flex flex-col">
+                <div class="p-5 sm:p-7 bg-white border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="font-extrabold text-slate-900 text-base sm:text-xl flex items-center gap-2">
+                        Pesan Masuk
+                    </h3>
+                </div>
+                <div id="list" class="flex-1 p-5 sm:p-7 bg-slate-50/50 grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 content-start">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- UNIVERSAL MESSAGE MODAL (Responsive & Parses HTML) -->
+    <div id="messageModal" class="fixed inset-0 z-[60] hidden flex-col justify-end sm:justify-center items-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeMessageModal()"></div>
+        
+        <!-- Modal Dialog -->
+        <div class="relative w-full max-w-4xl bg-slate-50 sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh] modal-animate sm:m-4 border border-white">
+            
+            <!-- Modal Header -->
+            <div class="px-5 sm:px-8 py-5 sm:py-6 border-b border-slate-200/60 flex justify-between items-center bg-white sticky top-0 z-10">
+                <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 truncate pr-4" id="modalSubject">Memuat detail...</h3>
+                <button onclick="closeMessageModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2.5 rounded-full transition-colors flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="overflow-y-auto custom-scrollbar flex-1 bg-slate-50">
+                <div class="p-5 sm:p-8 max-w-4xl mx-auto">
+                    <!-- Meta Data -->
+                    <div id="modalMeta" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-sm text-slate-500 bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <!-- Toggle Mode Mentah / Preview (JS akan inject ini jika berhasil diparse) -->
+                    <div id="modalControls" class="mb-4 flex justify-end hidden">
+                        <div class="bg-slate-200 p-1 rounded-xl flex inline-flex text-xs font-bold">
+                            <button id="btnViewHtml" class="px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-sm transition-all" onclick="toggleViewMode('html')">Tampilan Asli</button>
+                            <button id="btnViewRaw" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all" onclick="toggleViewMode('raw')">Data Mentah</button>
+                        </div>
+                    </div>
+
+                    <!-- Content Area (iframe for HTML email, pre for text) -->
+                    <div id="modalBodyContainer" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden min-h-[300px] flex flex-col">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="bg-white px-5 sm:px-8 py-5 border-t border-slate-200/60 flex justify-end gap-3 sticky bottom-0">
+                <button type="button" onclick="closeMessageModal()" class="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">Tutup Dialog</button>
+                <button type="button" id="modalDeleteBtn" class="px-5 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-colors text-sm">Hapus Pesan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-[70] flex items-center justify-center hidden transition-opacity">
+        <div class="bg-white p-8 rounded-[2rem] shadow-2xl flex flex-col items-center modal-animate">
+            <div class="animate-spin rounded-full h-12 w-12 border-[4px] border-indigo-100 border-t-indigo-600 mb-4"></div>
+            <p class="text-sm font-extrabold text-slate-700">Mohon tunggu...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://api.sonten.web.id";
+        let auth = JSON.parse(localStorage.getItem("auth_user") || "null");
+
+        // --- View Controller ---
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
+            const target = document.getElementById(viewId);
+            if(target) target.classList.add('active-view');
+        }
+
+        function init() {
+            if (!auth) {
+                showView('login-view');
+            } else {
+                if (auth.role === "admin") {
+                    showView('admin-view');
+                    document.getElementById('adminEmailDisplay').textContent = auth.email;
+                    loadUsers();
+                } else {
+                    showView('user-view');
+                    document.getElementById('activeEmail').textContent = auth.email;
+                    loadMessages();
+                }
+            }
+        }
+
+        // --- Helpers ---
+        function escapeHtml(str) {
+            return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function authHeaders() {
+            return { "Content-Type": "application/json", "Authorization": "Bearer " + (auth ? auth.token : "") };
+        }
+
+        function setLoading(state) {
+            const overlay = document.getElementById('loadingOverlay');
+            state ? overlay.classList.remove('hidden') : overlay.classList.add('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem("auth_user");
+            auth = null;
+            window.location.reload();
+        }
+
+        // --- MIME EMAIL PARSER ---
+        // Digunakan untuk menangkap payload raw (seperti contoh Canva)
+        function decodeQuotedPrintable(input) {
+            let str = input.replace(/=\r?\n/g, ''); // Hapus soft line-breaks
+            str = str.replace(/=([a-fA-F0-9]{2})/g, "%$1"); // Format URL-encode untuk karakter spesial
+            try { return decodeURIComponent(str); } catch(e) { return unescape(str); }
+        }
+
+        function parseEmail(raw) {
+            if (!raw) return { type: 'text', content: '', raw: '' };
+            if (!raw.includes('Content-Type: multipart')) return { type: 'text', content: raw, raw: raw };
+
+            let htmlBlock = "";
+            let textBlock = "";
+            
+            // Pemisahan berdasarkan boundary
+            const parts = raw.split(/------=_[^\r\n]+/);
+            for (let part of parts) {
+                if (part.match(/Content-Type:\s*text\/html/i)) htmlBlock = part;
+                else if (part.match(/Content-Type:\s*text\/plain/i)) textBlock = part;
+            }
+
+            let selected = htmlBlock || textBlock;
+            if (!selected) return { type: 'text', content: raw, raw: raw };
+
+            let isHtml = !!htmlBlock;
+            // Konten asli dipisahkan oleh 2 line break setelah headers
+            let contentMatch = selected.match(/\r?\n\r?\n([\s\S]*)/);
+            if (!contentMatch) return { type: 'text', content: raw, raw: raw };
+
+            let content = contentMatch[1].trim();
+
+            if (selected.match(/Content-Transfer-Encoding:\s*quoted-printable/i)) {
+                content = decodeQuotedPrintable(content);
+            }
+
+            return { type: isHtml ? 'html' : 'text', content: content, raw: raw };
+        }
+
+        // Global variable untuk toggle Modal
+        let currentParsedEmail = null;
+
+        function toggleViewMode(mode) {
+            if (!currentParsedEmail) return;
+            const container = document.getElementById('modalBodyContainer');
+            const btnHtml = document.getElementById('btnViewHtml');
+            const btnRaw = document.getElementById('btnViewRaw');
+
+            container.innerHTML = '';
+
+            if (mode === 'html') {
+                btnHtml.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-sm transition-all";
+                btnRaw.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                
+                const iframe = document.createElement('iframe');
+                iframe.className = "w-full min-h-[500px] border-0 bg-white flex-1";
+                iframe.sandbox = "allow-same-origin allow-popups"; 
+                iframe.srcdoc = currentParsedEmail.content;
+                container.appendChild(iframe);
+            } else {
+                btnRaw.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-sm transition-all";
+                btnHtml.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+
+                const pre = document.createElement('pre');
+                pre.className = "whitespace-pre-wrap font-mono text-slate-700 leading-relaxed text-xs p-5 flex-1 overflow-x-auto";
+                pre.textContent = currentParsedEmail.raw;
+                container.appendChild(pre);
+            }
+        }
+
+
+        // --- Modal Control ---
+        function closeMessageModal() {
+            document.getElementById('messageModal').classList.add('hidden');
+            document.getElementById('messageModal').classList.remove('flex');
+            currentParsedEmail = null;
+        }
+
+        async function openModalAndFetchData(id, isFromAdmin) {
+            const modal = document.getElementById('messageModal');
+            const mSubj = document.getElementById('modalSubject');
+            const mMeta = document.getElementById('modalMeta');
+            const mControls = document.getElementById('modalControls');
+            const mBodyContainer = document.getElementById('modalBodyContainer');
+            const mDelBtn = document.getElementById('modalDeleteBtn');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            mSubj.textContent = "Memuat detail pesan...";
+            mMeta.innerHTML = `<div class="animate-pulse h-4 bg-slate-200 rounded-full w-40"></div>`;
+            mControls.classList.add('hidden');
+            mBodyContainer.innerHTML = `<div class="p-5 animate-pulse space-y-3"><div class="h-4 bg-slate-200 rounded-full w-full"></div><div class="h-4 bg-slate-200 rounded-full w-5/6"></div></div>`;
+            mDelBtn.onclick = null;
+
+            try {
+                const res = await fetch(API_BASE + "/api/user/message/" + id, { headers: authHeaders() });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || "Gagal memuat detail pesan");
+
+                mSubj.textContent = escapeHtml(data.subject || "(No Subject)");
+                
+                // Formatter Meta
+                mMeta.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                            ${(data.from_email || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-900">${escapeHtml(data.from_email)}</span>
+                            <span class="text-xs text-slate-500 font-medium">Kepada: ${escapeHtml(data.user_email || "-")}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-3 py-2 rounded-xl mt-3 sm:mt-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        ${data.received_at}
+                    </div>
+                `;
+
+                // Parsing isi konten dari text ke HTML
+                currentParsedEmail = parseEmail(data.body_text);
+
+                if (currentParsedEmail.type === 'html') {
+                    mControls.classList.remove('hidden');
+                    toggleViewMode('html');
+                } else {
+                    mControls.classList.add('hidden'); // Sembunyikan toggle kalau cuma teks biasa
+                    mBodyContainer.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm p-6 overflow-x-auto">${escapeHtml(currentParsedEmail.content)}</pre>`;
+                }
+
+                // Delete logic
+                mDelBtn.onclick = async () => {
+                    if (!confirm("Hapus pesan ini secara permanen?")) return;
+                    setLoading(true);
+                    try {
+                        const delRes = await fetch(API_BASE + "/api/user/message/" + id, { 
+                            method: "DELETE", headers: authHeaders() 
+                        });
+                        if (delRes.ok) {
+                            closeMessageModal();
+                            isFromAdmin ? loadUserMessages() : loadMessages();
+                        } else {
+                            alert("Gagal menghapus pesan");
+                        }
+                    } catch (e) { alert("Error saat menghapus"); }
+                    finally { setLoading(false); }
+                };
+
+            } catch (err) {
+                mSubj.textContent = "Error";
+                mBodyContainer.innerHTML = `<div class="p-6 text-rose-500 font-bold">${err.message}</div>`;
+                mMeta.innerHTML = ``;
+            }
+        }
+
+
+        // --- Logic: Login ---
+        const loginForm = document.getElementById("loginForm");
+        const msg = document.getElementById("msg");
+
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            msg.className = "mt-6 text-sm text-center font-bold text-indigo-600 animate-pulse";
+            msg.textContent = "Memverifikasi...";
+
+            const email = document.getElementById("email").value.trim().toLowerCase();
+            const password = document.getElementById("password").value.trim();
+
+            try {
+                const res = await fetch(API_BASE + "/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    msg.className = "mt-6 text-sm text-center font-bold text-rose-600";
+                    msg.textContent = data.error || "Akses ditolak. Cek email/password.";
+                    return;
+                }
+
+                localStorage.setItem("auth_user", JSON.stringify(data.user));
+                auth = data.user;
+                msg.className = "mt-6 text-sm text-center font-bold text-emerald-600";
+                msg.textContent = "Berhasil masuk! Mengalihkan...";
+                setTimeout(init, 800);
+            } catch (err) {
+                msg.className = "mt-6 text-sm text-center font-bold text-rose-600";
+                msg.textContent = "Koneksi terputus ke server.";
+            }
         });
 
-        const data = await res.json();
+        // --- Logic: Admin Actions ---
+        async function loadUsers() {
+            const userTable = document.getElementById("userTable");
+            userTable.innerHTML = '<tr><td colspan="4" class="px-7 py-10 text-center text-slate-400 font-bold animate-pulse">Sinkronisasi data...</td></tr>';
 
-        if (!res.ok) {
-          msg.textContent = data.error || "Login gagal";
-          return;
+            try {
+                const res = await fetch(API_BASE + "/api/admin/users", { headers: authHeaders() });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                const users = data.users || [];
+                if (!users.length) {
+                    userTable.innerHTML = '<tr><td colspan="4" class="px-7 py-10 text-center text-slate-400">Tidak ada pengguna ditemukan.</td></tr>';
+                    return;
+                }
+
+                userTable.innerHTML = users.map(u => {
+                    const statusColor = u.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600";
+                    const toggleLabel = u.status === "active" ? "Bekukan" : "Aktifkan";
+                    const toggleTarget = u.status === "active" ? "inactive" : "active";
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 sm:px-7 py-4 font-bold text-slate-900 truncate max-w-[150px] sm:max-w-none">${escapeHtml(u.email)}</td>
+                            <td class="px-5 sm:px-7 py-4"><span class="px-3 py-1.5 bg-slate-100 rounded-lg text-[10px] font-extrabold uppercase text-slate-600">${escapeHtml(u.role)}</span></td>
+                            <td class="px-5 sm:px-7 py-4">
+                                <span class="px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase ${statusColor}">${u.status}</span>
+                            </td>
+                            <td class="px-5 sm:px-7 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button onclick="prefillInspect('${u.email}')" class="p-2 hover:bg-indigo-50 text-indigo-600 rounded-xl transition-colors" title="Lihat Inbox">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                    <button onclick="resetPassword('${u.email}')" class="p-2 hover:bg-blue-50 text-blue-600 rounded-xl transition-colors" title="Reset Pass">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                    </button>
+                                    <button onclick="toggleStatus('${u.email}', '${toggleTarget}')" class="p-2 hover:bg-slate-100 text-slate-600 rounded-xl transition-colors" title="${toggleLabel}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                    </button>
+                                    <button onclick="deleteUser('${u.email}')" class="p-2 hover:bg-rose-50 text-rose-600 rounded-xl transition-colors" title="Hapus Akun">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+                }).join("");
+            } catch (err) {
+                userTable.innerHTML = '<tr><td colspan="4" class="px-7 py-10 text-center text-rose-500 font-bold">Terjadi kesalahan saat memuat data.</td></tr>';
+            }
         }
 
-        localStorage.setItem("auth_user", JSON.stringify(data.user));
+        async function createUser() {
+            const email = document.getElementById("newEmail").value.trim().toLowerCase();
+            const password = document.getElementById("newPassword").value.trim();
+            const role = document.getElementById("newRole").value;
+            const msgEl = document.getElementById("adminMsg");
 
-        if (data.user.role === "admin") {
-          window.location.href = "./admin.html";
-        } else {
-          window.location.href = "./user.html";
+            if(!email || !password) return alert("Email dan password wajib diisi");
+
+            setLoading(true);
+            try {
+                const res = await fetch(API_BASE + "/api/admin/create-user", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email, password, role })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                msgEl.textContent = "✓ User berhasil ditambahkan";
+                msgEl.className = "text-xs text-center font-bold py-2 text-emerald-600";
+                
+                document.getElementById("newEmail").value = "";
+                document.getElementById("newPassword").value = "";
+                loadUsers();
+            } catch (err) {
+                msgEl.textContent = "× " + err.message;
+                msgEl.className = "text-xs text-center font-bold py-2 text-rose-600";
+            } finally { setLoading(false); }
         }
-      } catch (err) {
-        msg.textContent = "Tidak bisa terhubung ke server";
-      }
-    });
-  </script>
+
+        async function resetPassword(email) {
+            const newPassword = prompt("Masukkan sandi baru untuk " + email);
+            if (!newPassword) return;
+            setLoading(true);
+            try {
+                const res = await fetch(API_BASE + "/api/admin/reset-password", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email, newPassword })
+                });
+                if (res.ok) alert("Password berhasil diperbarui!");
+            } catch (err) { alert("Gagal memperbarui password"); }
+            finally { setLoading(false); }
+        }
+
+        async function toggleStatus(email, status) {
+            setLoading(true);
+            try {
+                await fetch(API_BASE + "/api/admin/set-status", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email, status })
+                });
+                loadUsers();
+            } catch (err) { alert("Gagal mengubah status"); }
+            finally { setLoading(false); }
+        }
+
+        async function deleteUser(email) {
+            if (!confirm(`Hapus permanen akun ${email}? Data tidak bisa dikembalikan.`)) return;
+            setLoading(true);
+            try {
+                await fetch(API_BASE + "/api/admin/delete-user", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email })
+                });
+                loadUsers();
+            } catch (err) { alert("Gagal menghapus user"); }
+            finally { setLoading(false); }
+        }
+
+        function prefillInspect(email) {
+            document.getElementById("inspectEmail").value = email;
+            loadUserMessages();
+            document.getElementById("inspectEmail").scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function loadUserMessages() {
+            const email = document.getElementById("inspectEmail").value.trim().toLowerCase();
+            const listEl = document.getElementById("inspectList");
+            if (!email) return;
+
+            listEl.innerHTML = '<div class="text-sm text-slate-400 font-bold animate-pulse md:col-span-2 text-center py-5">Scanning inbox...</div>';
+            try {
+                const res = await fetch(API_BASE + "/api/admin/messages?email=" + encodeURIComponent(email), { headers: authHeaders() });
+                const data = await res.json();
+                const messages = data.messages || [];
+
+                if (!messages.length) {
+                    listEl.innerHTML = '<div class="text-sm text-slate-400 font-medium italic md:col-span-2 text-center py-5">Inbox kosong.</div>';
+                    return;
+                }
+
+                listEl.innerHTML = messages.map(m => `
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all flex flex-col justify-between h-full group" onclick="openModalAndFetchData('${m.id}', true)">
+                        <div class="font-extrabold text-slate-900 text-sm group-hover:text-indigo-600 line-clamp-2 leading-tight">${escapeHtml(m.subject || "No Subject")}</div>
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex justify-between items-center">
+                            <span class="text-[10px] text-slate-500 truncate max-w-[120px] font-medium">Dari: ${escapeHtml(m.from_email)}</span>
+                            <span class="text-[10px] text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-lg">${m.received_at.split(' ')[0]}</span>
+                        </div>
+                    </div>
+                `).join("");
+            } catch (err) { listEl.innerHTML = '<div class="text-rose-500 text-xs font-bold md:col-span-2 text-center py-5">Server Error.</div>'; }
+        }
+
+        // --- Logic: User Actions ---
+        async function loadMessages() {
+            const listEl = document.getElementById("list");
+            listEl.innerHTML = '<div class="py-20 text-center animate-pulse text-slate-400 font-bold col-span-full">Sinkronisasi pesan...</div>';
+
+            try {
+                const res = await fetch(API_BASE + "/api/user/messages", { headers: authHeaders() });
+                const data = await res.json();
+                const messages = data.messages || [];
+
+                if (!messages.length) {
+                    listEl.innerHTML = `
+                    <div class="py-20 flex flex-col items-center justify-center col-span-full text-slate-300">
+                        <svg class="w-20 h-20 mb-4 opacity-50 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <p class="font-bold text-slate-400">Inbox Anda Kosong.</p>
+                        <p class="text-sm font-medium mt-1">Pesan yang masuk akan muncul di sini.</p>
+                    </div>`;
+                    return;
+                }
+
+                listEl.innerHTML = messages.map(m => `
+                    <div onclick="openModalAndFetchData('${m.id}', false)" class="p-5 bg-white border border-slate-200 rounded-[1.5rem] hover:border-indigo-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all group flex flex-col h-full">
+                        <div class="flex-1">
+                            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base group-hover:text-indigo-600 line-clamp-2 leading-snug mb-2">${escapeHtml(m.subject || "No Subject")}</h4>
+                            <p class="text-xs text-slate-500 line-clamp-1 font-medium">Dari: ${escapeHtml(m.from_email)}</p>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+                            <span class="text-[10px] sm:text-xs text-slate-400 font-bold">${m.received_at}</span>
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">Buka <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span>
+                        </div>
+                    </div>
+                `).join("");
+            } catch (err) { listEl.innerHTML = "<div class='text-rose-500 font-bold text-center col-span-full py-10'>Error loading inbox.</div>"; }
+        }
+
+        init();
+    </script>
 </body>
 </html>
