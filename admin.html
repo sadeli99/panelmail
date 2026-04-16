@@ -1,402 +1,500 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - MailPanel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-animate { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900">Panel Admin</h1>
-        <p class="text-sm text-slate-500">Kelola user dan lihat inbox mereka</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <span id="adminEmail" class="hidden sm:block text-sm text-slate-600"></span>
-        <button onclick="logout()" class="rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
-          Logout
-        </button>
-      </div>
-    </div>
-  </header>
+<body class="bg-slate-50 min-h-screen text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900 mb-4">Tambah User</h2>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
-            <input id="newEmail" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" placeholder="user@sonten.web.id" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Password</label>
-            <input id="newPassword" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" placeholder="Password user" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Role</label>
-            <select id="newRole" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900">
-              <option value="user">user</option>
-              <option value="admin">admin</option>
-            </select>
-          </div>
-
-          <button onclick="createUser()" class="rounded-xl bg-emerald-600 text-white px-5 py-3 font-medium hover:bg-emerald-700">
-            Tambah User
-          </button>
-
-          <div id="adminMsg" class="text-sm text-slate-600"></div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900 mb-4">Lihat Inbox User</h2>
-
-        <div class="flex flex-col sm:flex-row gap-3">
-          <input id="inspectEmail" class="flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" placeholder="email user" />
-          <button onclick="loadUserMessages()" class="rounded-xl bg-slate-900 text-white px-5 py-3 font-medium hover:bg-slate-800">
-            Lihat Inbox
-          </button>
-        </div>
-
-        <div id="inspectList" class="mt-4 text-sm text-slate-500">Masukkan email user untuk melihat inbox.</div>
-      </div>
-    </section>
-
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-slate-900">Daftar User</h2>
-          <button onclick="loadUsers()" class="rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
-            Refresh
-          </button>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead>
-              <tr class="border-b border-slate-200">
-                <th class="text-left py-3 pr-4 font-semibold text-slate-700">Email</th>
-                <th class="text-left py-3 pr-4 font-semibold text-slate-700">Role</th>
-                <th class="text-left py-3 pr-4 font-semibold text-slate-700">Status</th>
-                <th class="text-left py-3 pr-4 font-semibold text-slate-700">Dibuat</th>
-                <th class="text-left py-3 font-semibold text-slate-700">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="userTable"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900 mb-4">Detail Pesan</h2>
-        <div id="inspectDetail" class="text-sm text-slate-500">Klik tombol buka pada pesan user.</div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    const API_BASE = "https://api.sonten.web.id";
-    const auth = JSON.parse(localStorage.getItem("auth_user") || "null");
-
-    if (!auth || auth.role !== "admin") {
-      window.location.href = "./index.html";
-    }
-
-    document.getElementById("adminEmail").textContent = auth.email;
-
-    function escapeHtml(str) {
-      return String(str || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function authHeaders() {
-      return {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + auth.token
-      };
-    }
-
-    function logout() {
-      localStorage.removeItem("auth_user");
-      window.location.href = "./index.html";
-    }
-
-    async function loadUsers() {
-      const userTable = document.getElementById("userTable");
-      userTable.innerHTML = '<tr><td colspan="5" class="py-4 text-slate-500">Memuat...</td></tr>';
-
-      try {
-        const res = await fetch(API_BASE + "/api/admin/users", {
-          headers: authHeaders()
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          userTable.innerHTML = '<tr><td colspan="5" class="py-4 text-red-600">' + escapeHtml(data.error || "Gagal memuat user") + '</td></tr>';
-          return;
-        }
-
-        const users = data.users || [];
-
-        if (!users.length) {
-          userTable.innerHTML = '<tr><td colspan="5" class="py-4 text-slate-500">Belum ada user.</td></tr>';
-          return;
-        }
-
-        userTable.innerHTML = users.map(function(u) {
-          const badgeClass = u.status === "active"
-            ? "bg-emerald-100 text-emerald-700"
-            : "bg-red-100 text-red-700";
-
-          const toggleTarget = u.status === "active" ? "inactive" : "active";
-          const toggleLabel = u.status === "active" ? "Nonaktifkan" : "Aktifkan";
-
-          return `
-            <tr class="border-b border-slate-100">
-              <td class="py-4 pr-4 font-medium text-slate-800">${escapeHtml(u.email)}</td>
-              <td class="py-4 pr-4 text-slate-600">${escapeHtml(u.role)}</td>
-              <td class="py-4 pr-4">
-                <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}">
-                  ${escapeHtml(u.status)}
-                </span>
-              </td>
-              <td class="py-4 pr-4 text-slate-500">${escapeHtml(u.created_at || "-")}</td>
-              <td class="py-4">
-                <div class="flex flex-wrap gap-2">
-                  <button onclick="prefillInspect('${u.email}')" class="rounded-lg bg-slate-900 text-white px-3 py-2 text-xs font-medium hover:bg-slate-800">Inbox</button>
-                  <button onclick="resetPassword('${u.email}')" class="rounded-lg border border-blue-300 text-blue-700 px-3 py-2 text-xs font-medium hover:bg-blue-50">Reset</button>
-                  <button onclick="toggleStatus('${u.email}', '${toggleTarget}')" class="rounded-lg border border-slate-300 text-slate-700 px-3 py-2 text-xs font-medium hover:bg-slate-50">${toggleLabel}</button>
-                  <button onclick="deleteUser('${u.email}')" class="rounded-lg border border-red-300 text-red-700 px-3 py-2 text-xs font-medium hover:bg-red-50">Hapus</button>
+    <header class="glass border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2.5 rounded-xl hidden sm:block shadow-md shadow-indigo-100">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
                 </div>
-              </td>
-            </tr>
-          `;
-        }).join("");
-      } catch (err) {
-        userTable.innerHTML = '<tr><td colspan="5" class="py-4 text-red-600">Tidak bisa terhubung ke server</td></tr>';
-      }
-    }
-
-    async function createUser() {
-      const email = document.getElementById("newEmail").value.trim().toLowerCase();
-      const password = document.getElementById("newPassword").value.trim();
-      const role = document.getElementById("newRole").value;
-      const adminMsg = document.getElementById("adminMsg");
-
-      adminMsg.textContent = "Memproses...";
-
-      try {
-        const res = await fetch(API_BASE + "/api/admin/create-user", {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ email, password, role })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          adminMsg.textContent = data.error || "Gagal menambah user";
-          return;
-        }
-
-        adminMsg.textContent = "User berhasil dibuat: " + data.email;
-        document.getElementById("newEmail").value = "";
-        document.getElementById("newPassword").value = "";
-        document.getElementById("newRole").value = "user";
-        loadUsers();
-      } catch (err) {
-        adminMsg.textContent = "Tidak bisa terhubung ke server";
-      }
-    }
-
-    async function resetPassword(email) {
-      const newPassword = prompt("Masukkan password baru untuk " + email);
-      if (!newPassword) return;
-
-      try {
-        const res = await fetch(API_BASE + "/api/admin/reset-password", {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ email, newPassword })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.error || "Gagal reset password");
-          return;
-        }
-
-        alert("Password berhasil direset");
-      } catch (err) {
-        alert("Tidak bisa terhubung ke server");
-      }
-    }
-
-    async function toggleStatus(email, status) {
-      try {
-        const res = await fetch(API_BASE + "/api/admin/set-status", {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ email, status })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.error || "Gagal mengubah status");
-          return;
-        }
-
-        loadUsers();
-      } catch (err) {
-        alert("Tidak bisa terhubung ke server");
-      }
-    }
-
-    async function deleteUser(email) {
-      if (!confirm("Hapus user " + email + " beserta semua pesannya?")) return;
-
-      try {
-        const res = await fetch(API_BASE + "/api/admin/delete-user", {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ email })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.error || "Gagal menghapus user");
-          return;
-        }
-
-        loadUsers();
-        document.getElementById("inspectDetail").innerHTML = "Klik tombol buka pada pesan user.";
-      } catch (err) {
-        alert("Tidak bisa terhubung ke server");
-      }
-    }
-
-    function prefillInspect(email) {
-      document.getElementById("inspectEmail").value = email;
-      loadUserMessages();
-    }
-
-    async function loadUserMessages() {
-      const email = document.getElementById("inspectEmail").value.trim().toLowerCase();
-      const inspectList = document.getElementById("inspectList");
-
-      if (!email) {
-        inspectList.innerHTML = '<div class="text-sm text-slate-500">Masukkan email user dulu.</div>';
-        return;
-      }
-
-      inspectList.innerHTML = '<div class="text-sm text-slate-500">Memuat inbox user...</div>';
-
-      try {
-        const res = await fetch(API_BASE + "/api/admin/messages?email=" + encodeURIComponent(email), {
-          headers: authHeaders()
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          inspectList.innerHTML = '<div class="text-sm text-red-600">' + escapeHtml(data.error || "Gagal memuat inbox user") + '</div>';
-          return;
-        }
-
-        const messages = data.messages || [];
-
-        if (!messages.length) {
-          inspectList.innerHTML = '<div class="rounded-xl bg-slate-100 p-4 text-sm text-slate-500">Inbox user kosong.</div>';
-          document.getElementById("inspectDetail").innerHTML = "Klik tombol buka pada pesan user.";
-          return;
-        }
-
-        inspectList.innerHTML = messages.map(function(msg) {
-          return `
-            <div class="rounded-xl border border-slate-200 p-4 mb-3 bg-slate-50">
-              <div class="font-semibold text-slate-900">${escapeHtml(msg.subject || "(No Subject)")}</div>
-              <div class="text-xs text-slate-500 mt-1">Dari: ${escapeHtml(msg.from_email || "-")}</div>
-              <div class="text-xs text-slate-500">Waktu: ${escapeHtml(msg.received_at || "-")}</div>
-              <div class="mt-3 flex gap-2">
-                <button onclick="openAdminMessage('${msg.id}')" class="rounded-lg bg-slate-900 text-white px-3 py-2 text-xs font-medium hover:bg-slate-800">Buka</button>
-                <button onclick="adminDeleteMessage('${msg.id}')" class="rounded-lg border border-red-300 text-red-700 px-3 py-2 text-xs font-medium hover:bg-red-50">Hapus</button>
-              </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold text-slate-900">Admin Dashboard</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-500 font-bold" id="adminEmailDisplay"></p>
+                </div>
             </div>
-          `;
-        }).join("");
-      } catch (err) {
-        inspectList.innerHTML = '<div class="text-sm text-red-600">Tidak bisa terhubung ke server</div>';
-      }
-    }
+            <button onclick="logout()" class="px-4 py-2 w-full sm:w-auto bg-rose-50 text-rose-600 rounded-xl text-sm font-bold hover:bg-rose-100 transition-colors">Keluar</button>
+        </div>
+    </header>
 
-    async function openAdminMessage(id) {
-      const inspectDetail = document.getElementById("inspectDetail");
-      inspectDetail.innerHTML = "Memuat detail...";
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            <!-- Tambah User Card -->
+            <div class="lg:col-span-1 bg-white rounded-[2rem] p-5 sm:p-7 shadow-sm border border-slate-100">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                    <div class="p-1.5 bg-indigo-50 rounded-lg text-indigo-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg></div>
+                    Tambah Akun Baru
+                </h2>
+                <div class="space-y-3 sm:space-y-4">
+                    <input id="newEmail" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Email Baru" />
+                    <input id="newPassword" type="password" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Kata Sandi" />
+                    <select id="newRole" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white">
+                        <option value="user">Hak Akses: User</option>
+                        <option value="admin">Hak Akses: Admin</option>
+                    </select>
+                    <button onclick="createUser()" class="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 mt-2">Simpan Akun</button>
+                    <div id="adminMsg" class="text-xs text-center font-bold py-2 text-slate-500"></div>
+                </div>
+            </div>
 
-      try {
-        const res = await fetch(API_BASE + "/api/user/message/" + id, {
-          headers: authHeaders()
-        });
+            <!-- Inspeksi Inbox Card -->
+            <div class="lg:col-span-2 bg-white rounded-[2rem] p-5 sm:p-7 shadow-sm border border-slate-100 flex flex-col">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                    <div class="p-1.5 bg-blue-50 rounded-lg text-blue-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
+                    Inspeksi Inbox User
+                </h2>
+                <div class="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+                    <input id="inspectEmail" class="flex-1 rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Ketik alamat email user..." />
+                    <button onclick="loadUserMessages()" class="bg-slate-900 text-white px-6 sm:px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">Periksa</button>
+                </div>
+                <div id="inspectList" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2 flex-1 items-start content-start">
+                    <div class="text-sm text-slate-400 font-medium italic md:col-span-2 text-center py-10 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">Ketik email lalu klik Periksa untuk melihat inbox</div>
+                </div>
+            </div>
+        </div>
 
-        const data = await res.json();
+        <!-- Tabel Database -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-5 sm:px-7 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Database Pengguna</h2>
+                <button onclick="loadUsers()" class="flex items-center gap-2 text-indigo-600 font-bold text-xs sm:text-sm hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span class="hidden sm:inline">Perbarui</span>
+                </button>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left whitespace-nowrap min-w-[650px]">
+                    <thead>
+                        <tr class="text-xs uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                            <th class="px-5 sm:px-7 py-4 font-extrabold">Akun Email</th>
+                            <th class="px-5 sm:px-7 py-4 font-extrabold">Role</th>
+                            <th class="px-5 sm:px-7 py-4 font-extrabold">Status</th>
+                            <th class="px-5 sm:px-7 py-4 font-extrabold text-right">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable" class="divide-y divide-slate-100 text-sm font-medium">
+                        <!-- Injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
-        if (!res.ok) {
-          inspectDetail.innerHTML = '<div class="text-sm text-red-600">' + escapeHtml(data.error || "Gagal membuka pesan") + '</div>';
-          return;
+    <!-- UNIVERSAL MESSAGE MODAL (Responsive & Parses HTML) -->
+    <div id="messageModal" class="fixed inset-0 z-[60] hidden flex-col justify-end sm:justify-center items-center">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeMessageModal()"></div>
+        <div class="relative w-full max-w-4xl bg-slate-50 sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh] modal-animate sm:m-4 border border-white">
+            <div class="px-5 sm:px-8 py-5 sm:py-6 border-b border-slate-200/60 flex justify-between items-center bg-white sticky top-0 z-10">
+                <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 truncate pr-4" id="modalSubject">Memuat detail...</h3>
+                <button onclick="closeMessageModal()" class="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2.5 rounded-full transition-colors flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto custom-scrollbar flex-1 bg-slate-50">
+                <div class="p-5 sm:p-8 max-w-4xl mx-auto">
+                    <div id="modalMeta" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 text-sm text-slate-500 bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <div id="modalControls" class="mb-4 flex justify-end hidden">
+                        <div class="bg-slate-200 p-1 rounded-xl flex inline-flex text-xs font-bold">
+                            <button id="btnViewHtml" class="px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-sm transition-all" onclick="toggleViewMode('html')">Tampilan Asli</button>
+                            <button id="btnViewRaw" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all" onclick="toggleViewMode('raw')">Data Mentah</button>
+                        </div>
+                    </div>
+
+                    <div id="modalBodyContainer" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden min-h-[300px] flex flex-col">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white px-5 sm:px-8 py-5 border-t border-slate-200/60 flex justify-end gap-3 sticky bottom-0">
+                <button type="button" onclick="closeMessageModal()" class="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">Tutup Dialog</button>
+                <button type="button" id="modalDeleteBtn" class="px-5 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-colors text-sm">Hapus Pesan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-[70] flex items-center justify-center hidden transition-opacity">
+        <div class="bg-white p-8 rounded-[2rem] shadow-2xl flex flex-col items-center modal-animate">
+            <div class="animate-spin rounded-full h-12 w-12 border-[4px] border-indigo-100 border-t-indigo-600 mb-4"></div>
+            <p class="text-sm font-extrabold text-slate-700">Mohon tunggu...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://api.sonten.web.id";
+
+        // Fungsi aman untuk redirect di lingkungan Sandbox/Preview
+        function safeRedirect(url) {
+            try {
+                window.location.href = url;
+            } catch (e) {
+                console.error("Redirect diblokir oleh lingkungan preview:", e);
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+                        <div class="bg-white p-8 rounded-[2rem] shadow-xl text-center max-w-md border border-slate-100">
+                            <h2 class="text-xl font-extrabold text-slate-900 mb-4">Akses Dialihkan</h2>
+                            <p class="text-slate-500 mb-6 text-sm">Sistem mengalihkan Anda ke <b>${url}</b>, namun lingkungan preview saat ini membatasi navigasi antar file. Silakan buka file tersebut secara manual.</p>
+                        </div>
+                    </div>`;
+            }
+        }
+        
+        // --- AUTH PROTEKSI ---
+        let auth = null;
+        try {
+            const storedAuth = localStorage.getItem("auth_user");
+            if (!storedAuth) {
+                safeRedirect("./index.html"); // Lempar ke login jika tidak ada sesi
+            } else {
+                auth = JSON.parse(storedAuth);
+                if (auth.role !== "admin") {
+                    safeRedirect("./user.html"); // Lempar user biasa ke halamannya
+                }
+            }
+        } catch (error) {
+            localStorage.removeItem("auth_user");
+            safeRedirect("./index.html");
         }
 
-        inspectDetail.innerHTML = `
-          <div class="space-y-2 text-sm">
-            <div><span class="font-semibold text-slate-700">Subject:</span> <span class="text-slate-900">${escapeHtml(data.subject || "(No Subject)")}</span></div>
-            <div><span class="font-semibold text-slate-700">Dari:</span> <span class="text-slate-900">${escapeHtml(data.from_email || "-")}</span></div>
-            <div><span class="font-semibold text-slate-700">Untuk:</span> <span class="text-slate-900">${escapeHtml(data.user_email || "-")}</span></div>
-            <div><span class="font-semibold text-slate-700">Waktu:</span> <span class="text-slate-900">${escapeHtml(data.received_at || "-")}</span></div>
-          </div>
-          <pre class="mt-4 whitespace-pre-wrap break-words rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs text-slate-700 overflow-auto">${escapeHtml(data.body_text || "")}</pre>
-        `;
-      } catch (err) {
-        inspectDetail.innerHTML = '<div class="text-sm text-red-600">Tidak bisa terhubung ke server</div>';
-      }
-    }
-
-    async function adminDeleteMessage(id) {
-      if (!confirm("Hapus pesan ini?")) return;
-
-      try {
-        const res = await fetch(API_BASE + "/api/user/message/" + id, {
-          method: "DELETE",
-          headers: authHeaders()
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.error || "Gagal hapus pesan");
-          return;
+        // Tampilkan Email Admin di Header (Hanya jika auth valid)
+        if (auth && document.getElementById('adminEmailDisplay')) {
+            document.getElementById('adminEmailDisplay').textContent = auth.email;
         }
 
-        document.getElementById("inspectDetail").innerHTML = "Klik tombol buka pada pesan user.";
-        loadUserMessages();
-      } catch (err) {
-        alert("Tidak bisa terhubung ke server");
-      }
-    }
+        function authHeaders() {
+            return { "Content-Type": "application/json", "Authorization": "Bearer " + (auth ? auth.token : "") };
+        }
 
-    loadUsers();
-  </script>
+        function logout() {
+            localStorage.removeItem("auth_user");
+            safeRedirect("./index.html");
+        }
+
+        function escapeHtml(str) {
+            return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function setLoading(state) {
+            const overlay = document.getElementById('loadingOverlay');
+            state ? overlay.classList.remove('hidden') : overlay.classList.add('hidden');
+        }
+
+        // --- MIME EMAIL PARSER ---
+        function decodeQuotedPrintable(input) {
+            let str = input.replace(/=\r?\n/g, ''); 
+            str = str.replace(/=([a-fA-F0-9]{2})/g, "%$1"); 
+            try { return decodeURIComponent(str); } catch(e) { return unescape(str); }
+        }
+
+        function parseEmail(raw) {
+            if (!raw) return { type: 'text', content: '', raw: '' };
+            if (!raw.includes('Content-Type: multipart')) return { type: 'text', content: raw, raw: raw };
+
+            let htmlBlock = "";
+            let textBlock = "";
+            
+            const parts = raw.split(/------=_[^\r\n]+/);
+            for (let part of parts) {
+                if (part.match(/Content-Type:\s*text\/html/i)) htmlBlock = part;
+                else if (part.match(/Content-Type:\s*text\/plain/i)) textBlock = part;
+            }
+
+            let selected = htmlBlock || textBlock;
+            if (!selected) return { type: 'text', content: raw, raw: raw };
+
+            let isHtml = !!htmlBlock;
+            let contentMatch = selected.match(/\r?\n\r?\n([\s\S]*)/);
+            if (!contentMatch) return { type: 'text', content: raw, raw: raw };
+
+            let content = contentMatch[1].trim();
+            if (selected.match(/Content-Transfer-Encoding:\s*quoted-printable/i)) {
+                content = decodeQuotedPrintable(content);
+            }
+            return { type: isHtml ? 'html' : 'text', content: content, raw: raw };
+        }
+
+        let currentParsedEmail = null;
+
+        function toggleViewMode(mode) {
+            if (!currentParsedEmail) return;
+            const container = document.getElementById('modalBodyContainer');
+            const btnHtml = document.getElementById('btnViewHtml');
+            const btnRaw = document.getElementById('btnViewRaw');
+
+            container.innerHTML = '';
+
+            if (mode === 'html') {
+                btnHtml.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-sm transition-all";
+                btnRaw.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                
+                const iframe = document.createElement('iframe');
+                iframe.className = "w-full min-h-[500px] border-0 bg-white flex-1";
+                iframe.sandbox = "allow-same-origin allow-popups"; 
+                iframe.srcdoc = currentParsedEmail.content;
+                container.appendChild(iframe);
+            } else {
+                btnRaw.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-sm transition-all";
+                btnHtml.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+
+                const pre = document.createElement('pre');
+                pre.className = "whitespace-pre-wrap font-mono text-slate-700 leading-relaxed text-xs p-5 flex-1 overflow-x-auto";
+                pre.textContent = currentParsedEmail.raw;
+                container.appendChild(pre);
+            }
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').classList.add('hidden');
+            document.getElementById('messageModal').classList.remove('flex');
+            currentParsedEmail = null;
+        }
+
+        async function openModalAndFetchData(id) {
+            const modal = document.getElementById('messageModal');
+            const mSubj = document.getElementById('modalSubject');
+            const mMeta = document.getElementById('modalMeta');
+            const mControls = document.getElementById('modalControls');
+            const mBodyContainer = document.getElementById('modalBodyContainer');
+            const mDelBtn = document.getElementById('modalDeleteBtn');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            mSubj.textContent = "Memuat detail pesan...";
+            mMeta.innerHTML = `<div class="animate-pulse h-4 bg-slate-200 rounded-full w-40"></div>`;
+            mControls.classList.add('hidden');
+            mBodyContainer.innerHTML = `<div class="p-5 animate-pulse space-y-3"><div class="h-4 bg-slate-200 rounded-full w-full"></div><div class="h-4 bg-slate-200 rounded-full w-5/6"></div></div>`;
+            mDelBtn.onclick = null;
+
+            try {
+                const res = await fetch(API_BASE + "/api/user/message/" + id, { headers: authHeaders() });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || "Gagal memuat detail pesan");
+
+                mSubj.textContent = escapeHtml(data.subject || "(No Subject)");
+                
+                mMeta.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                            ${(data.from_email || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-900">${escapeHtml(data.from_email)}</span>
+                            <span class="text-xs text-slate-500 font-medium">Kepada: ${escapeHtml(data.user_email || "-")}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-3 py-2 rounded-xl mt-3 sm:mt-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        ${data.received_at}
+                    </div>
+                `;
+
+                currentParsedEmail = parseEmail(data.body_text);
+
+                if (currentParsedEmail.type === 'html') {
+                    mControls.classList.remove('hidden');
+                    toggleViewMode('html');
+                } else {
+                    mControls.classList.add('hidden');
+                    mBodyContainer.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm p-6 overflow-x-auto">${escapeHtml(currentParsedEmail.content)}</pre>`;
+                }
+
+                mDelBtn.onclick = async () => {
+                    if (!confirm("Hapus pesan ini secara permanen?")) return;
+                    setLoading(true);
+                    try {
+                        const delRes = await fetch(API_BASE + "/api/user/message/" + id, { method: "DELETE", headers: authHeaders() });
+                        if (delRes.ok) {
+                            closeMessageModal();
+                            loadUserMessages();
+                        } else { alert("Gagal menghapus pesan"); }
+                    } catch (e) { alert("Error saat menghapus"); }
+                    finally { setLoading(false); }
+                };
+            } catch (err) {
+                mSubj.textContent = "Error";
+                mBodyContainer.innerHTML = `<div class="p-6 text-rose-500 font-bold">${err.message}</div>`;
+                mMeta.innerHTML = ``;
+            }
+        }
+
+        // --- Logic: Admin Actions ---
+        async function loadUsers() {
+            const userTable = document.getElementById("userTable");
+            userTable.innerHTML = '<tr><td colspan="4" class="px-7 py-10 text-center text-slate-400 font-bold animate-pulse">Sinkronisasi data...</td></tr>';
+
+            try {
+                const res = await fetch(API_BASE + "/api/admin/users", { headers: authHeaders() });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                const users = data.users || [];
+                if (!users.length) {
+                    userTable.innerHTML = '<tr><td colspan="4" class="px-7 py-10 text-center text-slate-400">Tidak ada pengguna ditemukan.</td></tr>';
+                    return;
+                }
+
+                userTable.innerHTML = users.map(u => {
+                    const statusColor = u.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600";
+                    const toggleLabel = u.status === "active" ? "Bekukan" : "Aktifkan";
+                    const toggleTarget = u.status === "active" ? "inactive" : "active";
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 sm:px-7 py-4 font-bold text-slate-900 truncate max-w-[150px] sm:max-w-none">${escapeHtml(u.email)}</td>
+                            <td class="px-5 sm:px-7 py-4"><span class="px-3 py-1.5 bg-slate-100 rounded-lg text-[10px] font-extrabold uppercase text-slate-600">${escapeHtml(u.role)}</span></td>
+                            <td class="px-5 sm:px-7 py-4">
+                                <span class="px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase ${statusColor}">${u.status}</span>
+                            </td>
+                            <td class="px-5 sm:px-7 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button onclick="prefillInspect('${u.email}')" class="p-2 hover:bg-indigo-50 text-indigo-600 rounded-xl transition-colors" title="Lihat Inbox">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                    <button onclick="resetPassword('${u.email}')" class="p-2 hover:bg-blue-50 text-blue-600 rounded-xl transition-colors" title="Reset Pass">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                    </button>
+                                    <button onclick="toggleStatus('${u.email}', '${toggleTarget}')" class="p-2 hover:bg-slate-100 text-slate-600 rounded-xl transition-colors" title="${toggleLabel}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                    </button>
+                                    <button onclick="deleteUser('${u.email}')" class="p-2 hover:bg-rose-50 text-rose-600 rounded-xl transition-colors" title="Hapus Akun">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+                }).join("");
+            } catch (err) { userTable.innerHTML = '<tr><td colspan="4" class="px-7 py-10 text-center text-rose-500 font-bold">Terjadi kesalahan saat memuat data.</td></tr>'; }
+        }
+
+        async function createUser() {
+            const email = document.getElementById("newEmail").value.trim().toLowerCase();
+            const password = document.getElementById("newPassword").value.trim();
+            const role = document.getElementById("newRole").value;
+            const msgEl = document.getElementById("adminMsg");
+
+            if(!email || !password) return alert("Email dan password wajib diisi");
+
+            setLoading(true);
+            try {
+                const res = await fetch(API_BASE + "/api/admin/create-user", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email, password, role })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                msgEl.textContent = "✓ User berhasil ditambahkan";
+                msgEl.className = "text-xs text-center font-bold py-2 text-emerald-600";
+                
+                document.getElementById("newEmail").value = "";
+                document.getElementById("newPassword").value = "";
+                loadUsers();
+            } catch (err) {
+                msgEl.textContent = "× " + err.message;
+                msgEl.className = "text-xs text-center font-bold py-2 text-rose-600";
+            } finally { setLoading(false); }
+        }
+
+        async function resetPassword(email) {
+            const newPassword = prompt("Masukkan sandi baru untuk " + email);
+            if (!newPassword) return;
+            setLoading(true);
+            try {
+                const res = await fetch(API_BASE + "/api/admin/reset-password", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email, newPassword })
+                });
+                if (res.ok) alert("Password berhasil diperbarui!");
+            } catch (err) { alert("Gagal memperbarui password"); }
+            finally { setLoading(false); }
+        }
+
+        async function toggleStatus(email, status) {
+            setLoading(true);
+            try {
+                await fetch(API_BASE + "/api/admin/set-status", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email, status })
+                });
+                loadUsers();
+            } catch (err) { alert("Gagal mengubah status"); }
+            finally { setLoading(false); }
+        }
+
+        async function deleteUser(email) {
+            if (!confirm(`Hapus permanen akun ${email}? Data tidak bisa dikembalikan.`)) return;
+            setLoading(true);
+            try {
+                await fetch(API_BASE + "/api/admin/delete-user", {
+                    method: "POST", headers: authHeaders(), body: JSON.stringify({ email })
+                });
+                loadUsers();
+            } catch (err) { alert("Gagal menghapus user"); }
+            finally { setLoading(false); }
+        }
+
+        function prefillInspect(email) {
+            document.getElementById("inspectEmail").value = email;
+            loadUserMessages();
+            document.getElementById("inspectEmail").scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function loadUserMessages() {
+            const email = document.getElementById("inspectEmail").value.trim().toLowerCase();
+            const listEl = document.getElementById("inspectList");
+            if (!email) return;
+
+            listEl.innerHTML = '<div class="text-sm text-slate-400 font-bold animate-pulse md:col-span-2 text-center py-5">Scanning inbox...</div>';
+            try {
+                const res = await fetch(API_BASE + "/api/admin/messages?email=" + encodeURIComponent(email), { headers: authHeaders() });
+                const data = await res.json();
+                const messages = data.messages || [];
+
+                if (!messages.length) {
+                    listEl.innerHTML = '<div class="text-sm text-slate-400 font-medium italic md:col-span-2 text-center py-5">Inbox kosong.</div>';
+                    return;
+                }
+
+                listEl.innerHTML = messages.map(m => `
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all flex flex-col justify-between h-full group" onclick="openModalAndFetchData('${m.id}')">
+                        <div class="font-extrabold text-slate-900 text-sm group-hover:text-indigo-600 line-clamp-2 leading-tight">${escapeHtml(m.subject || "No Subject")}</div>
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex justify-between items-center">
+                            <span class="text-[10px] text-slate-500 truncate max-w-[120px] font-medium">Dari: ${escapeHtml(m.from_email)}</span>
+                            <span class="text-[10px] text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-lg">${m.received_at.split(' ')[0]}</span>
+                        </div>
+                    </div>
+                `).join("");
+            } catch (err) { listEl.innerHTML = '<div class="text-rose-500 text-xs font-bold md:col-span-2 text-center py-5">Server Error.</div>'; }
+        }
+
+        // Jalankan saat load halaman admin (Hanya jika auth valid)
+        if (auth) {
+            loadUsers();
+        }
+    </script>
 </body>
 </html>
