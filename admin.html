@@ -211,33 +211,65 @@
         function decodeQuotedPrintable(input) {
             let str = input.replace(/=\r?\n/g, ''); 
             str = str.replace(/=([a-fA-F0-9]{2})/g, "%$1"); 
-            try { return decodeURIComponent(str); } catch(e) { return unescape(str); }
+            try { return decodeURIComponent(str); } catch(e) { 
+                try { return unescape(str); } catch(e2) { return str; }
+            }
         }
 
         function parseEmail(raw) {
             if (!raw) return { type: 'text', content: '', raw: '' };
-            if (!raw.includes('Content-Type: multipart')) return { type: 'text', content: raw, raw: raw };
 
-            let htmlBlock = "";
-            let textBlock = "";
+            let isHtml = false;
+            let content = raw;
+            let selectedBlock = raw;
+
+            // Cek apakah email multipart (mengandung boundary)
+            let boundaryMatch = raw.match(/boundary="?([^"\r\n]+)"?/i);
+            if (boundaryMatch || raw.includes('multipart/')) {
+                let parts = [];
+                if (boundaryMatch) {
+                    let boundary = boundaryMatch[1];
+                    parts = raw.split(new RegExp('--' + boundary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+                } else {
+                    parts = raw.split(/------=_[^\r\n]+/);
+                }
+
+                let htmlBlock = "";
+                let textBlock = "";
+                for (let part of parts) {
+                    if (part.match(/Content-Type:\s*text\/html/i)) htmlBlock = part;
+                    else if (part.match(/Content-Type:\s*text\/plain/i)) textBlock = part;
+                }
+                selectedBlock = htmlBlock || textBlock || raw;
+                isHtml = !!htmlBlock;
+            } else {
+                // Jika bukan multipart, cek apakah konten utamanya HTML
+                if (raw.match(/Content-Type:\s*text\/html/i)) {
+                    isHtml = true;
+                }
+            }
+
+            // Pisahkan Headers dan Body dengan double baris baru (\r\n\r\n)
+            let headerBodySplit = selectedBlock.split(/\r?\n\r?\n/);
             
-            const parts = raw.split(/------=_[^\r\n]+/);
-            for (let part of parts) {
-                if (part.match(/Content-Type:\s*text\/html/i)) htmlBlock = part;
-                else if (part.match(/Content-Type:\s*text\/plain/i)) textBlock = part;
+            if (headerBodySplit.length > 1) {
+                let headers = headerBodySplit.shift(); // Ambil bagian header
+                content = headerBodySplit.join('\n\n').trim(); // Sisanya adalah body email
+                
+                // Lakukan decode sesuai format Content-Transfer-Encoding
+                if (headers.match(/Content-Transfer-Encoding:\s*quoted-printable/i)) {
+                    content = decodeQuotedPrintable(content);
+                } else if (headers.match(/Content-Transfer-Encoding:\s*base64/i)) {
+                    try { 
+                        content = decodeURIComponent(escape(atob(content.replace(/\s/g, '')))); 
+                    } catch(e) { 
+                        try { content = atob(content.replace(/\s/g, '')); } catch(e2) {} 
+                    }
+                }
+            } else {
+                content = selectedBlock.trim();
             }
 
-            let selected = htmlBlock || textBlock;
-            if (!selected) return { type: 'text', content: raw, raw: raw };
-
-            let isHtml = !!htmlBlock;
-            let contentMatch = selected.match(/\r?\n\r?\n([\s\S]*)/);
-            if (!contentMatch) return { type: 'text', content: raw, raw: raw };
-
-            let content = contentMatch[1].trim();
-            if (selected.match(/Content-Transfer-Encoding:\s*quoted-printable/i)) {
-                content = decodeQuotedPrintable(content);
-            }
             return { type: isHtml ? 'html' : 'text', content: content, raw: raw };
         }
 
