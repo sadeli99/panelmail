@@ -35,7 +35,7 @@
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
                 <button onclick="loadMessages()" class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all text-center">Refresh</button>
-                <button onclick="logout()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all text-center">Logout</button>
+                <button onclick="logout()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all text-center">Keluar</button>
             </div>
         </div>
     </header>
@@ -101,26 +101,34 @@
 
     <script>
         const API_BASE = "https://api.sonten.web.id";
+
+        function safeRedirect(url) {
+            try { window.location.href = url; } catch (e) {
+                document.body.innerHTML = `<div class="p-6 text-center">Dialihkan ke ${url}...</div>`;
+            }
+        }
         
         // --- AUTH PROTEKSI ---
         let auth = null;
         try {
             const storedAuth = localStorage.getItem("auth_user");
             if (!storedAuth) {
-                window.location.href = "index.html"; // Lempar ke login jika tidak ada sesi
+                safeRedirect("./index.html");
             } else {
                 auth = JSON.parse(storedAuth);
                 if (auth.role !== "user") {
-                    window.location.href = "admin.html"; // Lempar admin ke halamannya
+                    safeRedirect("./admin.html"); 
                 }
             }
         } catch (error) {
             localStorage.removeItem("auth_user");
-            window.location.href = "index.html";
+            safeRedirect("./index.html");
         }
 
         // Tampilkan email aktif
-        document.getElementById('activeEmail').textContent = auth.email;
+        if (auth && document.getElementById('activeEmail')) {
+            document.getElementById('activeEmail').textContent = auth.email;
+        }
 
         function authHeaders() {
             return { "Content-Type": "application/json", "Authorization": "Bearer " + (auth ? auth.token : "") };
@@ -128,7 +136,7 @@
 
         function logout() {
             localStorage.removeItem("auth_user");
-            window.location.href = "index.html";
+            safeRedirect("./index.html");
         }
 
         function escapeHtml(str) {
@@ -140,37 +148,68 @@
             state ? overlay.classList.remove('hidden') : overlay.classList.add('hidden');
         }
 
-        // --- MIME EMAIL PARSER ---
+        // --- MIME EMAIL PARSER (UPDATED AWALAN HTML) ---
         function decodeQuotedPrintable(input) {
+            // Hapus soft line breaks (=\r\n atau =\n)
             let str = input.replace(/=\r?\n/g, ''); 
-            str = str.replace(/=([a-fA-F0-9]{2})/g, "%$1"); 
-            try { return decodeURIComponent(str); } catch(e) { return unescape(str); }
+            // Decode karakter hexadecimal (=XX)
+            str = str.replace(/=([a-fA-F0-9]{2})/g, function(match, hex) {
+                return String.fromCharCode(parseInt(hex, 16));
+            });
+            // Tangani konversi utf-8
+            try { return decodeURIComponent(escape(str)); } catch(e) { return str; }
         }
 
         function parseEmail(raw) {
             if (!raw) return { type: 'text', content: '', raw: '' };
-            if (!raw.includes('Content-Type: multipart')) return { type: 'text', content: raw, raw: raw };
 
-            let htmlBlock = "";
-            let textBlock = "";
-            
-            const parts = raw.split(/------=_[^\r\n]+/);
-            for (let part of parts) {
-                if (part.match(/Content-Type:\s*text\/html/i)) htmlBlock = part;
-                else if (part.match(/Content-Type:\s*text\/plain/i)) textBlock = part;
+            let content = raw;
+            let isHtml = false;
+
+            // Cek encoding global dari header
+            let isQP = /Content-Transfer-Encoding:\s*quoted-printable/i.test(raw);
+            let isBase64 = /Content-Transfer-Encoding:\s*base64/i.test(raw);
+
+            // Cari index dimulainya tag HTML sesuai permintaan Anda
+            let htmlStartIndex = raw.search(/<!doctype\s+html/i);
+            if (htmlStartIndex === -1) {
+                htmlStartIndex = raw.search(/<html/i);
             }
 
-            let selected = htmlBlock || textBlock;
-            if (!selected) return { type: 'text', content: raw, raw: raw };
+            if (htmlStartIndex !== -1) {
+                isHtml = true;
+                // Ekstrak teks mulai dari tag HTML hingga akhir
+                let bodyPart = raw.substring(htmlStartIndex);
 
-            let isHtml = !!htmlBlock;
-            let contentMatch = selected.match(/\r?\n\r?\n([\s\S]*)/);
-            if (!contentMatch) return { type: 'text', content: raw, raw: raw };
+                // Potong teks ekstra di bawah tag </html> (jika ada signature/boundary tersisa)
+                let htmlEndIndex = bodyPart.search(/<\/html>/i);
+                if (htmlEndIndex !== -1) {
+                    bodyPart = bodyPart.substring(0, htmlEndIndex + 7);
+                }
 
-            let content = contentMatch[1].trim();
-            if (selected.match(/Content-Transfer-Encoding:\s*quoted-printable/i)) {
-                content = decodeQuotedPrintable(content);
+                // Decode jika terenkripsi
+                if (isQP) {
+                    bodyPart = decodeQuotedPrintable(bodyPart);
+                } else if (isBase64) {
+                    try { bodyPart = decodeURIComponent(escape(atob(bodyPart.replace(/\s/g, '')))); } 
+                    catch(e) { try { bodyPart = atob(bodyPart.replace(/\s/g, '')); } catch(e2) {} }
+                }
+
+                content = bodyPart;
+            } else {
+                // Fallback jika tidak ada tag HTML sama sekali (Teks Biasa)
+                let parts = raw.split(/\r?\n\r?\n/);
+                if (parts.length > 1) {
+                    let bodyPart = parts.slice(1).join('\n\n').trim();
+                    if (isQP) {
+                        bodyPart = decodeQuotedPrintable(bodyPart);
+                    } else if (isBase64) {
+                        try { bodyPart = atob(bodyPart.replace(/\s/g, '')); } catch(e) {}
+                    }
+                    content = bodyPart;
+                }
             }
+
             return { type: isHtml ? 'html' : 'text', content: content, raw: raw };
         }
 
@@ -189,7 +228,7 @@
                 btnRaw.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
                 
                 const iframe = document.createElement('iframe');
-                iframe.className = "w-full min-h-[500px] border-0 bg-white flex-1";
+                iframe.className = "w-full min-h-[500px] border-0 bg-white flex-1 rounded-b-2xl";
                 iframe.sandbox = "allow-same-origin allow-popups"; 
                 iframe.srcdoc = currentParsedEmail.content;
                 container.appendChild(iframe);
@@ -198,7 +237,7 @@
                 btnHtml.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
 
                 const pre = document.createElement('pre');
-                pre.className = "whitespace-pre-wrap font-mono text-slate-700 leading-relaxed text-xs p-5 flex-1 overflow-x-auto";
+                pre.className = "whitespace-pre-wrap font-mono text-slate-700 leading-relaxed text-xs p-5 flex-1 overflow-x-auto rounded-b-2xl m-0";
                 pre.textContent = currentParsedEmail.raw;
                 container.appendChild(pre);
             }
@@ -258,7 +297,7 @@
                     toggleViewMode('html');
                 } else {
                     mControls.classList.add('hidden');
-                    mBodyContainer.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm p-6 overflow-x-auto">${escapeHtml(currentParsedEmail.content)}</pre>`;
+                    mBodyContainer.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm p-6 overflow-x-auto m-0">${escapeHtml(currentParsedEmail.content)}</pre>`;
                 }
 
                 mDelBtn.onclick = async () => {
@@ -275,7 +314,11 @@
                 };
             } catch (err) {
                 mSubj.textContent = "Error";
-                mBodyContainer.innerHTML = `<div class="p-6 text-rose-500 font-bold">${err.message}</div>`;
+                mBodyContainer.innerHTML = `
+                    <div class="flex-1 flex flex-col items-center justify-center text-rose-500 py-10">
+                        <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="font-bold">${escapeHtml(err.message)}</p>
+                    </div>`;
                 mMeta.innerHTML = ``;
             }
         }
@@ -312,11 +355,13 @@
                         </div>
                     </div>
                 `).join("");
-            } catch (err) { listEl.innerHTML = "<div class='text-rose-500 font-bold text-center col-span-full py-10'>Error loading inbox.</div>"; }
+            } catch (err) { listEl.innerHTML = "<div class='text-rose-500 font-bold text-center col-span-full py-10'>Gagal mengambil pesan dari server.</div>"; }
         }
 
         // Jalankan saat load halaman
-        loadMessages();
+        if(auth) {
+            loadMessages();
+        }
     </script>
 </body>
 </html>
