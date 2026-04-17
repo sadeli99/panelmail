@@ -49,7 +49,18 @@
                 </h2>
                 <div class="space-y-3 sm:space-y-4">
                     <input id="newEmail" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Email Baru" />
-                    <input id="newPassword" type="password" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Kata Sandi" />
+                    
+                    <!-- Wrapper Input Password dengan Ikon Mata -->
+                    <div class="relative">
+                        <input id="newPassword" type="password" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 pr-12 text-sm font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="Kata Sandi" />
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none">
+                            <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+
                     <select id="newRole" class="w-full rounded-2xl border border-slate-200 px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white">
                         <option value="user">Hak Akses: User</option>
                         <option value="admin">Hak Akses: Admin</option>
@@ -173,6 +184,27 @@
         function setLoading(state) {
             const overlay = document.getElementById('loadingOverlay');
             state ? overlay.classList.remove('hidden') : overlay.classList.add('hidden');
+        }
+
+        // --- TOGGLE PASSWORD VISIBILITY ---
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById("newPassword");
+            const eyeIcon = document.getElementById("eyeIcon");
+            
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                // Mengubah icon menjadi 'Eye Slash' (mata dicoret)
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                `;
+            } else {
+                passInput.type = "password";
+                // Mengubah icon menjadi 'Eye' (mata biasa)
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                `;
+            }
         }
 
         // --- MIME EMAIL PARSER ---
@@ -309,6 +341,12 @@
                 
                 document.getElementById("newEmail").value = "";
                 document.getElementById("newPassword").value = "";
+                
+                // Mengubah kolom password ke bentuk awal (sembunyi) jika posisinya sedang 'text'
+                if (document.getElementById("newPassword").type === "text") {
+                    togglePasswordVisibility();
+                }
+
                 loadUsers();
             } catch (err) {
                 msgEl.textContent = "× " + err.message;
@@ -406,7 +444,8 @@
                 </div>`;
 
             try {
-                const res = await fetch(API_BASE + "/api/user/message/" + id, { headers: authHeaders() });
+                // UPDATE: Menggunakan endpoint admin
+                const res = await fetch(API_BASE + "/api/admin/message/" + id, { headers: authHeaders() });
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.error || "Gagal membuka pesan");
@@ -433,10 +472,12 @@
                         <div class="flex justify-between items-start mb-6">
                             <div>
                                 <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mb-2 leading-snug">${escapeHtml(data.subject || "(No Subject)")}</h3>
-                                <div class="flex items-center gap-2 text-xs sm:text-sm text-slate-500">
-                                    <span class="font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded-md">${escapeHtml(data.from_email)}</span>
+                                <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-slate-500">
+                                    <span class="font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded-md" title="Dari">${escapeHtml(data.from_email || "-")}</span>
+                                    <span>&rarr;</span>
+                                    <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md" title="Untuk">${escapeHtml(data.user_email || "-")}</span>
                                     <span>&bull;</span>
-                                    <span>${data.received_at}</span>
+                                    <span>${escapeHtml(data.received_at || "-")}</span>
                                 </div>
                             </div>
                             <button onclick="adminDeleteMessage('${id}')" class="px-4 py-2 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors shrink-0 ml-4">Hapus</button>
@@ -470,7 +511,8 @@
             if (!confirm("Hapus pesan ini secara permanen?")) return;
             setLoading(true);
             try {
-                const res = await fetch(API_BASE + "/api/user/message/" + id, { method: "DELETE", headers: authHeaders() });
+                // UPDATE: Menggunakan endpoint admin
+                const res = await fetch(API_BASE + "/api/admin/message/" + id, { method: "DELETE", headers: authHeaders() });
                 if (res.ok) {
                     // Kembalikan area detail ke state kosong
                     document.getElementById("inspectDetail").innerHTML = `
