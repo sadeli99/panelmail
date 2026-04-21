@@ -3,114 +3,257 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Login - MailPanel</title>
+    <title>Login - SonMail</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Animasi Blob Background */
         @keyframes blob {
             0% { transform: translate(0px, 0px) scale(1); }
             33% { transform: translate(30px, -50px) scale(1.1); }
             66% { transform: translate(-20px, 20px) scale(0.9); }
             100% { transform: translate(0px, 0px) scale(1); }
         }
-        .animate-blob {
-            animation: blob 7s infinite;
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+
+        .google-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 1040px;
+            min-height: 500px;
+            border-radius: 28px;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            margin: 20px;
+            z-index: 10;
+            transition: all 0.3s ease;
         }
-        .animation-delay-2000 {
-            animation-delay: 2s;
+
+        .left-panel { flex: 1; padding: 48px; display: flex; flex-direction: column; }
+        .right-panel { flex: 1; padding: 48px; display: flex; flex-direction: column; justify-content: center; }
+
+        @media (max-width: 900px) {
+            .google-container {
+                flex-direction: column;
+                max-width: 450px;
+                min-height: auto;
+                padding: 36px 24px;
+                background: white;
+            }
+            .left-panel, .right-panel { padding: 0; }
+            .left-panel { margin-bottom: 32px; }
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.2s;
+            background: transparent;
+        }
+        .input-field:focus { border: 2px solid #ea6e00; padding: 15px; }
+
+        .action-button {
+            background-color: #ea6e00;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .action-button:hover { background-color: #d66500; transform: translateY(-1px); }
+        .action-button:active { transform: translateY(0); }
+        .action-button:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        .footer {
+            width: 100%;
+            max-width: 1040px;
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 24px;
+            font-size: 12px;
+            color: #444746;
+            z-index: 10;
+        }
+        @media (max-width: 900px) {
+            .footer { max-width: 450px; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
+        }
+
+        .hidden-step { display: none; }
+        .fade-in { animation: fadeIn 0.4s forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="min-h-screen text-slate-900 selection:bg-red-100 selection:text-red-900 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+<body class="selection:bg-orange-100">
 
-    <!-- Dekorasi Latar Belakang Abstrak (Gaya Dribbble) -->
+    <!-- Dekorasi Latar Belakang Abstrak (Gradient & Blobs) -->
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-        <div class="absolute top-[20%] right-[-5%] w-96 h-96 bg-rose-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div class="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-orange-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div class="absolute top-[10%] right-[-5%] w-[450px] h-[450px] bg-amber-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-10%] left-[10%] w-[600px] h-[600px] bg-rose-100/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
     </div>
 
-    <!-- Container Utama -->
-    <div class="w-full max-w-[420px] relative z-10">
-        
-        <!-- Kartu Login -->
-        <div class="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(225,29,72,0.15)] p-8 sm:p-12 border border-white">
-            
-            <!-- Header Kartu -->
-            <div class="mb-10 text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-600 to-rose-500 rounded-[1.25rem] mb-6 shadow-lg shadow-red-500/30 transform transition-transform hover:scale-105">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                </div>
-                <h1 class="text-2xl sm:text-[28px] font-extrabold tracking-tight text-slate-900 leading-tight">Selamat Datang</h1>
-                <p class="text-sm font-medium text-slate-500 mt-2">Masuk untuk mengelola email Anda</p>
+    <div class="google-container">
+        <!-- Kolom Kiri: Informasi Akun -->
+        <div class="left-panel">
+            <div class="mb-6">
+                <img src="https://i.postimg.cc/Ls36xpPb/IMG-20260414-173347.png" class="h-10 w-auto" alt="AbabilMail">
             </div>
+            <h1 id="titleText" class="text-[36px] font-normal text-[#1f1f1f] leading-tight mb-4">Login</h1>
+            <p id="subtitleText" class="text-[16px] text-[#1f1f1f]">Gunakan Akun SonMail Anda</p>
+            
+            <!-- Email display khusus step password -->
+            <div id="emailDisplay" class="hidden flex items-center gap-2 mt-4 px-3 py-1 border border-slate-200 rounded-full w-fit cursor-pointer hover:bg-slate-50 transition-colors" onclick="goToStep(1)">
+                <div class="w-5 h-5 bg-slate-100 rounded-full flex items-center justify-center">
+                    <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+                <span id="selectedEmail" class="text-sm font-medium text-slate-700"></span>
+                <svg class="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </div>
+        </div>
 
-            <!-- Form -->
-            <form id="loginForm" class="space-y-5">
+        <!-- Kolom Ranan: Formulir -->
+        <div class="right-panel">
+            <form id="loginForm" onsubmit="return false;" class="space-y-4">
                 
-                <!-- Input Email -->
-                <div>
-                    <label class="block text-[13px] font-bold text-slate-700 mb-2 ml-1">Alamat Email</label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-slate-400 group-focus-within:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                        </div>
-                        <input id="email" type="email" class="w-full rounded-2xl border-2 border-transparent bg-slate-50/80 px-4 py-4 pl-11 text-sm font-medium text-slate-900 focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all placeholder:text-slate-400" placeholder="nama@email.com" required />
+                <!-- STEP 1: INPUT EMAIL -->
+                <div id="step-email" class="fade-in space-y-4">
+                    <div>
+                        <input id="email" type="email" class="input-field" placeholder="Email" required autocomplete="username" />
+                        <button type="button" class="text-[#ea6e00] text-sm font-bold mt-2 hover:underline">Lupa email?</button>
+                    </div>
+                    <div class="pt-4">
+                        <p class="text-sm text-[#444746] leading-relaxed">
+                            Bukan komputer Anda? Gunakan mode Tamu untuk login secara pribadi. <a href="#" class="text-[#ea6e00] font-bold hover:underline">Pelajari selengkapnya</a>
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-between mt-10">
+                        <button type="button" class="text-[#ea6e00] text-sm font-bold hover:bg-orange-50 px-4 py-2 rounded-full transition-colors">
+                            Buat akun
+                        </button>
+                        <button type="button" onclick="validateAndGoToPassword()" class="action-button">
+                            Berikutnya
+                        </button>
                     </div>
                 </div>
 
-                <!-- Input Kata Sandi -->
-                <div>
-                    <label class="block text-[13px] font-bold text-slate-700 mb-2 ml-1">Kata Sandi</label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-slate-400 group-focus-within:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        </div>
-                        <input id="password" type="password" class="w-full rounded-2xl border-2 border-transparent bg-slate-50/80 px-4 py-4 pl-11 pr-12 text-sm font-medium text-slate-900 focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all placeholder:text-slate-400" placeholder="••••••••" required />
-                        
-                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-red-600 transition-colors focus:outline-none">
+                <!-- STEP 2: INPUT PASSWORD -->
+                <div id="step-password" class="hidden-step space-y-4">
+                    <div class="relative">
+                        <input id="password" type="password" class="input-field" placeholder="Masukkan sandi Anda" required autocomplete="current-password" />
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-4 text-slate-400 hover:text-[#ea6e00]">
                             <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
                     </div>
+                    <button type="button" class="text-[#ea6e00] text-sm font-bold hover:underline">Lupa sandi?</button>
+                    
+                    <div id="msgContainer" class="hidden mt-2">
+                        <p id="msg" class="text-sm text-red-600 font-bold bg-red-50 p-3 rounded-lg border border-red-100"></p>
+                    </div>
+
+                    <div class="flex items-center justify-end mt-10">
+                        <button id="submitBtn" onclick="handleLogin()" class="action-button flex items-center gap-2">
+                            <span id="btnText">Masuk</span>
+                            <div id="btnLoader" class="hidden">
+                                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </div>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Tombol Submit -->
-                <div class="pt-4">
-                    <button id="submitBtn" type="submit" class="w-full relative group overflow-hidden rounded-2xl bg-red-600 text-white py-4 font-extrabold text-[15px] shadow-[0_10px_20px_-10px_rgba(220,38,38,0.5)] hover:shadow-[0_15px_25px_-10px_rgba(220,38,38,0.6)] hover:-translate-y-[1px] active:translate-y-[1px] transition-all duration-200">
-                        <span id="btnText" class="relative z-10 flex items-center justify-center gap-2">
-                            Masuk Sekarang
-                            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </span>
-                        <!-- Efek Loading dalam Button -->
-                        <span id="btnLoader" class="absolute inset-0 z-10 flex items-center justify-center bg-red-700 hidden">
-                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Memproses...
-                        </span>
-                    </button>
-                </div>
             </form>
-
-            <div id="msgContainer" class="mt-6 text-center hidden">
-                <p id="msg" class="text-[13px] font-bold rounded-xl py-3 px-4"></p>
-            </div>
-            
         </div>
-        
-        <p class="text-center text-slate-400 font-medium text-xs mt-8">&copy; 2026 MailPanel. Hak Cipta Dilindungi.</p>
+    </div>
+
+    <!-- Footer Bawah -->
+    <div class="footer">
+        <div class="flex items-center gap-1 cursor-pointer hover:bg-slate-200 px-3 py-1.5 rounded transition-colors">
+            <span>Indonesia</span>
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        </div>
+        <div class="flex gap-6">
+            <a href="#" class="hover:underline">Bantuan</a>
+            <a href="#" class="hover:underline">Privasi</a>
+            <a href="#" class="hover:underline">Persyaratan</a>
+        </div>
     </div>
 
     <script>
         const API_BASE = "https://api.sonten.web.id";
+        let currentStep = 1;
 
-        // Fitur Toggle Tampilkan/Sembunyikan Password
-        function togglePassword() {
+        // Navigasi langkah login
+        function goToStep(step) {
+            const stepEmail = document.getElementById('step-email');
+            const stepPassword = document.getElementById('step-password');
+            const titleText = document.getElementById('titleText');
+            const subtitleText = document.getElementById('subtitleText');
+            const emailDisplay = document.getElementById('emailDisplay');
+            const emailInput = document.getElementById('email').value;
+
+            if (step === 1) {
+                currentStep = 1;
+                stepEmail.classList.remove('hidden-step');
+                stepEmail.classList.add('fade-in');
+                stepPassword.classList.add('hidden-step');
+                
+                titleText.textContent = "Login";
+                subtitleText.style.display = "block";
+                emailDisplay.classList.add('hidden');
+            } else if (step === 2) {
+                currentStep = 2;
+                stepEmail.classList.add('hidden-step');
+                stepPassword.classList.remove('hidden-step');
+                stepPassword.classList.add('fade-in');
+
+                titleText.textContent = "Selamat datang";
+                subtitleText.style.display = "none";
+                emailDisplay.classList.remove('hidden');
+                document.getElementById('selectedEmail').textContent = emailInput;
+            }
+        }
+
+        function validateAndGoToPassword() {
+            const email = document.getElementById('email').value.trim();
+            if (!email || !email.includes('@')) {
+                document.getElementById('email').classList.add('border-red-500');
+                document.getElementById('email').focus();
+                return;
+            }
+            document.getElementById('email').classList.remove('border-red-500');
+            goToStep(2);
+        }
+
+        function togglePasswordVisibility() {
             const passInput = document.getElementById("password");
             const eyeIcon = document.getElementById("eyeIcon");
-            
             if (passInput.type === "password") {
                 passInput.type = "text";
                 eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>`;
@@ -120,56 +263,21 @@
             }
         }
 
-        // Fungsi aman untuk redirect di lingkungan Sandbox/Preview
-        function safeRedirect(url) {
-            try {
-                window.location.href = url;
-            } catch (e) {
-                console.error("Redirect diblokir oleh lingkungan preview:", e);
-                document.body.innerHTML = `
-                    <div class="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-                        <div class="bg-white p-8 rounded-[2rem] shadow-xl text-center max-w-md border border-slate-100">
-                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                            <h2 class="text-xl font-extrabold text-slate-900 mb-2">Berhasil Login!</h2>
-                            <p class="text-slate-500 mb-6 text-sm font-medium">Sesi telah disimpan. Sistem akan mengalihkan Anda ke <b>${url}</b>, namun lingkungan preview membatasi navigasi otomatis. Silakan buka file <b>${url}</b> secara manual.</p>
-                        </div>
-                    </div>`;
-            }
-        }
+        async function handleLogin() {
+            const email = document.getElementById("email").value.trim().toLowerCase();
+            const password = document.getElementById("password").value.trim();
+            const submitBtn = document.getElementById("submitBtn");
+            const btnText = document.getElementById("btnText");
+            const btnLoader = document.getElementById("btnLoader");
+            const msgContainer = document.getElementById("msgContainer");
+            const msg = document.getElementById("msg");
 
-        // CEK SESI: Jika sudah ada sesi aktif, langsung lempar ke halaman yang sesuai
-        try {
-            const storedAuth = localStorage.getItem("auth_user");
-            if (storedAuth) {
-                const auth = JSON.parse(storedAuth);
-                if (auth && auth.token) {
-                    safeRedirect(auth.role === "admin" ? "admin.html" : "user.html");
-                }
-            }
-        } catch (err) {
-            localStorage.removeItem("auth_user");
-        }
+            if (!password) return;
 
-        const loginForm = document.getElementById("loginForm");
-        const msgContainer = document.getElementById("msgContainer");
-        const msg = document.getElementById("msg");
-        const btnText = document.getElementById("btnText");
-        const btnLoader = document.getElementById("btnLoader");
-        const submitBtn = document.getElementById("submitBtn");
-
-        loginForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            
-            // Set state tombol jadi loading
             submitBtn.disabled = true;
             btnText.classList.add("hidden");
             btnLoader.classList.remove("hidden");
             msgContainer.classList.add("hidden");
-
-            const email = document.getElementById("email").value.trim().toLowerCase();
-            const password = document.getElementById("password").value.trim();
 
             try {
                 const res = await fetch(API_BASE + "/api/login", {
@@ -180,42 +288,35 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    // Tampilkan Error
                     msgContainer.classList.remove("hidden");
-                    msg.className = "text-[13px] font-bold rounded-xl py-3 px-4 bg-rose-50 text-rose-600 border border-rose-100";
-                    msg.innerHTML = `<span class="flex items-center justify-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${data.error || "Email atau kata sandi salah"}</span>`;
-                    
-                    // Kembalikan state tombol
+                    msg.textContent = data.error || "Gagal masuk. Silakan cek sandi Anda.";
                     submitBtn.disabled = false;
                     btnText.classList.remove("hidden");
                     btnLoader.classList.add("hidden");
                     return;
                 }
 
-                // Simpan Sesi 
                 localStorage.setItem("auth_user", JSON.stringify(data.user));
-                
-                // Tampilkan Sukses
-                msgContainer.classList.remove("hidden");
-                msg.className = "text-[13px] font-bold rounded-xl py-3 px-4 bg-emerald-50 text-emerald-600 border border-emerald-100";
-                msg.innerHTML = `<span class="flex items-center justify-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Login berhasil! Mengalihkan...</span>`;
-                
-                setTimeout(() => {
-                    safeRedirect(data.user.role === "admin" ? "admin.html" : "user.html");
-                }, 600);
-                
+                window.location.href = data.user.role === "admin" ? "admin.html" : "user.html";
             } catch (err) {
-                // Tampilkan Error Koneksi
                 msgContainer.classList.remove("hidden");
-                msg.className = "text-[13px] font-bold rounded-xl py-3 px-4 bg-rose-50 text-rose-600 border border-rose-100";
-                msg.innerHTML = `<span class="flex items-center justify-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Gagal terhubung ke server</span>`;
-                
-                // Kembalikan state tombol
+                msg.textContent = "Kesalahan koneksi ke server.";
                 submitBtn.disabled = false;
                 btnText.classList.remove("hidden");
                 btnLoader.classList.add("hidden");
             }
-        });
+        }
+
+        // Cek Sesi Awal
+        try {
+            const storedAuth = localStorage.getItem("auth_user");
+            if (storedAuth) {
+                const auth = JSON.parse(storedAuth);
+                if (auth && auth.token) {
+                    window.location.href = auth.role === "admin" ? "admin.html" : "user.html";
+                }
+            }
+        } catch (err) { localStorage.removeItem("auth_user"); }
     </script>
 </body>
 </html>
